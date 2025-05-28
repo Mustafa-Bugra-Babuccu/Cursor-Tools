@@ -11,6 +11,7 @@ from device_id_modifier import DeviceIDModifier
 from account_info_manager import AccountInfoManager
 from disable_update_manager import DisableUpdateManager
 from reset_machine_id_manager import ResetMachineIDManager
+from auto_update_manager import AutoUpdateManager
 
 def is_admin():
     """Check if the current process has administrator privileges"""
@@ -45,6 +46,7 @@ class CursorToolsApp:
         self.account_info_manager = AccountInfoManager()
         self.disable_update_manager = DisableUpdateManager()
         self.reset_machine_id_manager = ResetMachineIDManager()
+        self.auto_update_manager = AutoUpdateManager()
 
     def run(self):
         """Main application loop"""
@@ -61,6 +63,15 @@ class CursorToolsApp:
             else:
                 print("Failed to obtain administrator privileges. Exiting.")
                 sys.exit(1)
+
+        # Perform automatic update check at startup
+        try:
+            self.auto_update_manager.cleanup_old_files()  # Clean up old files first
+            self.auto_update_manager.perform_update_check_and_install()
+        except Exception as e:
+            self.ui_manager.display_error(f"Update check failed: {str(e)}")
+            self.ui_manager.display_warning("Continuing with current version...")
+            self.ui_manager.pause()
 
         try:
             while True:

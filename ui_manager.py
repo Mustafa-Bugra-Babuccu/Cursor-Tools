@@ -212,3 +212,30 @@ class UIManager:
         )
 
         self.console.print(warning_panel)
+
+    def display_update_progress(self, message, progress_value=None, total=None):
+        """Display update progress with optional progress bar"""
+        if progress_value is not None and total is not None:
+            percentage = (progress_value / total) * 100
+            self.console.print(f"[bold blue]ℹ {message} ({percentage:.1f}%)[/bold blue]")
+        else:
+            self.console.print(f"[bold blue]ℹ {message}[/bold blue]")
+
+    def display_update_notification(self, current_version, latest_version, release_notes=""):
+        """Display update notification panel"""
+        update_text = Text("🚀 UPDATE AVAILABLE!", style="bold bright_yellow")
+        update_text.append(f"\n\nCurrent Version: {current_version}", style="dim")
+        update_text.append(f"\nLatest Version: {latest_version}", style="bold green")
+
+        if release_notes:
+            notes = release_notes[:150] + "..." if len(release_notes) > 150 else release_notes
+            update_text.append(f"\n\nWhat's New:\n{notes}", style="white")
+
+        update_panel = Panel(
+            Align.center(update_text),
+            border_style="bright_yellow",
+            padding=(1, 2),
+            title="[bold bright_yellow]Update Available[/bold bright_yellow]"
+        )
+
+        self.console.print(update_panel)

@@ -22,7 +22,7 @@ class CursorToolsBuilder:
         # Build configuration
         self.build_config = {
             "one_file": True,
-            "one_folder": True,
+            "one_folder": False,
             "console": True,
             "admin_manifest": True,
             "optimize": True,
@@ -43,6 +43,8 @@ class CursorToolsBuilder:
             "disable_update.py",
             "reset_machine_id_manager.py",
             "reset_machine_id.py",
+            "auto_update_manager.py",
+            "auto_update_config.py",
             "requirements.txt"
         ]
 
@@ -146,6 +148,7 @@ a = Analysis(
         'rich.text',
         'rich.prompt',
         'rich.align',
+        'rich.progress',
         'colorama',
         'requests',
         'winreg',
@@ -160,7 +163,10 @@ a = Analysis(
         're',
         'datetime',
         'pathlib',
-        'typing'
+        'typing',
+        'subprocess',
+        'shutil',
+        'time'
     ],
     hookspath=[],
     hooksconfig={{}},

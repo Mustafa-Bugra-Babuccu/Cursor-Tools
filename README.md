@@ -35,6 +35,14 @@
 - Create backups before making changes
 - Restore previous configurations
 
+### 🚀 Auto-Update System
+- Automatic update checking at startup
+- Download and install updates from GitHub releases
+- Forced update policy - requires latest version to continue
+- Safe update process with backup creation
+- Automatic cleanup of old files and backups
+- Progress indication during download and installation
+
 ## 🎨 User Interface
 
 Cursor-Tools features a beautiful, rich command-line interface with:
@@ -144,6 +152,7 @@ Cursor-Tools/
 ├── device_id_modifier.py      # Device ID modification logic
 ├── disable_update_manager.py  # Update disabling functionality
 ├── reset_machine_id_manager.py # Machine ID reset operations
+├── auto_update_manager.py     # Automatic update system
 ├── registry_manager.py        # Windows registry operations
 ├── acc_info.py               # Cursor account info retrieval
 ├── config.py                 # Configuration management

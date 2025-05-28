@@ -144,6 +144,15 @@ class CursorToolsConfig:
             'patch_main_js_file': 'true'
         }
 
+        self.config['AutoUpdate'] = {
+            'check_on_startup': 'true',
+            'force_update_policy': 'true',
+            'update_check_timeout': '10',
+            'download_timeout': '300',
+            'backup_retention_days': '30',
+            'temp_cleanup_days': '7'
+        }
+
         self.config['Paths'] = {
             'backup_directory': self.backups_dir,
             'cursor_tools_directory': self.cursor_tools_dir,
