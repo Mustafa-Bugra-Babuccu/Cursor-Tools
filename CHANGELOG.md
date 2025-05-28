@@ -135,26 +135,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Future Releases
-
-### Planned Features for v1.1.0
-- Enhanced error recovery mechanisms
-- Additional backup compression options
-- Improved token detection algorithms
-- Extended configuration options
-- Performance optimizations
-- Additional security validations
-
-### Planned Features for v1.2.0
-- Scheduled backup functionality
-- Batch operation support
-- Enhanced logging system
-- Configuration import/export
-- Advanced registry monitoring
-- Custom modification profiles
-
----
-
 ## Release Notes Format
 
 Each release will include:
