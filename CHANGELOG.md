@@ -5,37 +5,7 @@ All notable changes to Cursor-Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2025-05-28
-
-### Added
-- **Auto-Update System** - Complete automatic update functionality
-  - Automatic update checking at application startup
-  - GitHub API integration for release detection
-  - Version comparison and update availability detection
-  - Forced update policy - application requires latest version to continue
-  - Automatic download of updates from GitHub releases
-  - Safe update installation with backup creation
-  - Progress indication during download and installation
-  - Automatic cleanup of old temporary and backup files
-  - Batch script-based update installation for seamless replacement
-  - Error handling for network issues and download failures
-  - Integration with existing Rich CLI interface
-
-### Changed
-- **Main Application Flow** - Added update check before normal operation
-- **Configuration System** - Added auto-update settings to config.ini
-- **Build System** - Updated to include auto-update module in builds
-- **UI Manager** - Added update-specific display methods
-
-### Technical Details
-- **Update Check Endpoint**: GitHub API releases endpoint
-- **Download Source**: GitHub releases page
-- **Update Policy**: Forced updates (application exits if user declines)
-- **Backup Strategy**: Automatic backup creation before updates
-- **Installation Method**: Batch script for safe executable replacement
-- **Cleanup**: Automatic removal of files older than 7 days (temp) and 30 days (backups)
-
-## [1.0.0] - 2025-05-28
+## [1.0.0] - 2024-12-19
 
 ### Added
 - **Initial Release** - First stable version of Cursor-Tools
@@ -73,6 +43,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Create comprehensive backups before operations
   - Custom UI modifications and branding changes
   - Token limit modifications for enhanced functionality
+
+- **Auto-Update System** - Complete automatic update functionality
+  - Automatic update checking at application startup
+  - GitHub API integration for release detection
+  - Version comparison and update availability detection
+  - Forced update policy - application requires latest version to continue
+  - Automatic download of updates from GitHub releases
+  - Safe update installation with backup creation
+  - Progress indication during download and installation
+  - Automatic cleanup of old temporary and backup files
+  - Batch script-based update installation for seamless replacement
+  - Error handling for network issues and download failures
+  - Integration with existing Rich CLI interface
 
 - **Rich User Interface**
   - Beautiful command-line interface using Rich library
@@ -119,6 +102,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Registry Operations**: Safe manipulation of Windows registry with backup/restore
 - **File Operations**: Automatic backup creation and restoration capabilities
 - **API Integration**: Cursor account information retrieval with multiple authentication methods
+- **Auto-Update System**:
+  - Update Check Endpoint: GitHub API releases endpoint
+  - Download Source: GitHub releases page
+  - Update Policy: Forced updates (application exits if user declines)
+  - Backup Strategy: Automatic backup creation before updates
+  - Installation Method: Batch script for safe executable replacement
+  - Cleanup: Automatic removal of files older than 7 days (temp) and 30 days (backups)
 
 ### Documentation
 - Comprehensive README.md with installation and usage instructions
