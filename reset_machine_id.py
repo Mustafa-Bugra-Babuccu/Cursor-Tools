@@ -32,7 +32,15 @@ def get_cursor_paths(translator=None) -> Tuple[str, str]:
     base_path = reset_paths['base_path']
 
     if not os.path.exists(base_path):
-        raise OSError(translator.get('reset.path_not_found', path=base_path) if translator else f"Cursor path not found: {base_path}")
+        error_msg = f"Cursor installation not found at: {base_path}\n"
+        error_msg += "Checked locations:\n"
+        error_msg += "  - %LOCALAPPDATA%\\Programs\\Cursor\\resources\\app (old location)\n"
+        error_msg += "  - C:\\Program Files\\cursor\\resources\\app (new location)\n"
+        error_msg += "Please ensure Cursor is properly installed."
+
+        if translator:
+            error_msg = translator.get('reset.path_not_found', path=base_path)
+        raise OSError(error_msg)
 
     # Check if files exist
     if not os.path.exists(pkg_path):
@@ -53,7 +61,16 @@ def get_workbench_cursor_path(translator=None) -> str:
     workbench_path = config.reset_machine_id_paths['workbench_path']
 
     if not os.path.exists(workbench_path):
-        raise OSError(translator.get('reset.file_not_found', path=workbench_path) if translator else f"Cursor workbench file not found: {workbench_path}")
+        error_msg = f"Cursor workbench file not found: {workbench_path}\n"
+        error_msg += "This usually means:\n"
+        error_msg += "  1. Cursor is not installed\n"
+        error_msg += "  2. Cursor is installed in a different location\n"
+        error_msg += "  3. The Cursor version has a different file structure\n"
+        error_msg += f"Expected file: {os.path.basename(workbench_path)}"
+
+        if translator:
+            error_msg = translator.get('reset.file_not_found', path=workbench_path)
+        raise OSError(error_msg)
 
     return workbench_path
 
@@ -137,6 +154,8 @@ def check_cursor_version(translator) -> bool:
     except Exception as e:
         print(f"{Fore.RED}✗ {translator.get('reset.check_version_failed', error=str(e)) if translator else f'Version check failed: {e}'}{Style.RESET_ALL}")
         return False
+
+
 
 def modify_workbench_js(file_path: str, translator=None) -> bool:
     """Modify workbench file content"""
@@ -310,6 +329,7 @@ class MachineIDResetter:
                 )
             """)
 
+            # Basic machine ID updates
             updates = [
                 (key, value) for key, value in new_ids.items()
             ]
@@ -451,6 +471,8 @@ class MachineIDResetter:
             print(f"{Fore.RED}✗ {self.translator.get('reset.process_error', error=str(e)) if self.translator else f'Process error: {e}'}{Style.RESET_ALL}")
             return False
 
+
+
     def update_machine_id_file(self, machine_id: str) -> bool:
         """Update machineId file with new machine_id"""
         try:
@@ -482,6 +504,55 @@ class MachineIDResetter:
                 error_msg = self.translator.get('reset.update_failed', error=str(e))
             print(f"{Fore.RED}✗ {error_msg}{Style.RESET_ALL}")
             return False
+
+def reset_token_limits(translator=None) -> bool:
+    """Reset token limits in SQLite database (from reset.js bt function)"""
+    try:
+        # Only print if translator is provided (not None)
+        if translator is not None:
+            print(f"{Fore.CYAN}ℹ {translator.get('reset.checking_sqlite') if translator else 'Checking SQLite database'}...{Style.RESET_ALL}")
+
+        # Use centralized configuration path
+        sqlite_path = config.cursor_paths['sqlite_path']
+
+        if not os.path.exists(sqlite_path):
+            if translator is not None:
+                print(f"{Fore.RED}✗ {translator.get('reset.sqlite_not_found') if translator else 'SQLite database not found'}{Style.RESET_ALL}")
+            return False
+
+        # Create backup
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"state.vscdb.token.backup.{timestamp}"
+        backup_path = os.path.join(config.reset_machine_id_paths['reset_backups_dir'], backup_filename)
+        shutil.copy2(sqlite_path, backup_path)
+        if translator is not None:
+            print(f"{Fore.CYAN}💾 {translator.get('reset.creating_backup') if translator else 'Creating database backup'}...{Style.RESET_ALL}")
+
+        # Connect to SQLite database
+        import sqlite3
+        conn = sqlite3.connect(sqlite_path)
+        cursor = conn.cursor()
+
+        if translator is not None:
+            print(f"{Fore.CYAN}ℹ {translator.get('reset.resetting_tokens') if translator else 'Resetting token limits'}...{Style.RESET_ALL}")
+
+        # Reset token usage (from reset.js bt function)
+        cursor.execute("""
+            UPDATE ItemTable SET value = '{"global":{"usage":{"sessionCount":0,"tokenCount":0}}}'
+            WHERE key LIKE '%cursor%usage%'
+        """)
+
+        conn.commit()
+        conn.close()
+
+        if translator is not None:
+            print(f"{Fore.GREEN}✓ {translator.get('reset.tokens_reset_success') if translator else 'Token limits reset successfully'}{Style.RESET_ALL}")
+        return True
+
+    except Exception as e:
+        if translator is not None:
+            print(f"{Fore.RED}✗ {translator.get('reset.token_reset_failed', error=str(e)) if translator else f'Failed to reset token limits: {e}'}{Style.RESET_ALL}")
+        return False
 
 def run(translator=None):
     """Main function to run the reset machine ID process"""

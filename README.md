@@ -5,21 +5,22 @@
 ![Python](https://img.shields.io/badge/python-v3.7+-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-orange.svg)
 
 ## 🚀 Features
 
 ### 📊 Account Information
 - View comprehensive Cursor account details
 - Display subscription type and status
-- Show usage statistics for Fast Response (GPT-4) and Slow Response (GPT-3.5)
+- Show usage statistics for Fast Response and Slow Response
 - Monitor trial days remaining
 - Track API usage limits
 
 ### 🔧 Device ID Modifier
 - Modify Windows device IDs and registry entries
 - Automatic backup creation before modifications
-- Restore from previous backups
+- **Enhanced Backup UI**: Rich table interface for backup restoration with detailed information
+- Restore from previous backups with improved selection interface
 - View current registry values
 - Safe registry manipulation with administrator privileges
 
@@ -32,8 +33,18 @@
 - Reset Cursor's machine identification
 - Modify system registry entries
 - Patch application files for enhanced functionality
+- **Token Reset Integration**: Automatic token limit reset functionality
 - Create backups before making changes
 - Restore previous configurations
+
+### 🚀 Pro UI Features (Enhanced)
+- **Simplified User Experience**: Streamlined output with clean completion messages
+- **Token Reset Integration**: Automatic token limit reset as part of Pro features application
+- **Silent Operation Mode**: All operations run quietly with only final status messages
+- **Comprehensive Backup**: Automatic backup creation before applying any changes
+- **Enhanced Error Handling**: Robust error handling with graceful failure recovery
+- **UI Modifications**: Apply workbench and comprehensive UI customizations
+- **Database Updates**: Pro tier activation and usage data reset
 
 ### 🚀 Auto-Update System
 - Automatic update checking at startup
@@ -98,10 +109,15 @@ Cursor-Tools features a beautiful, rich command-line interface with:
 ### Main Menu Options
 ```
 1. Account Info          - View Cursor account information
-2. Device ID Modifier    - Modify Windows device identifiers
+2. Device ID Modifier    - Modify Windows device identifiers (enhanced backup UI)
 3. Disable Auto Update   - Prevent automatic Cursor updates
-4. Reset Machine ID      - Reset Cursor's machine identification
-5. Exit Application      - Close the application
+4. Reset Machine ID      - Reset Cursor's machine identification (with token reset)
+5. Pro UI Features       - Apply Pro-related UI modifications and settings
+   • Apply All Pro UI Features   - Complete Pro UI feature application (simplified output)
+   • UI Modifications Only       - UI changes without database updates (simplified output)
+   • Database Updates Only       - Database changes without UI modifications
+   • Restore Pro UI Features Backup - Restore from automatic backup (enhanced table UI)
+6. Exit Application      - Close the application
 ```
 
 ### Important Notes
@@ -149,15 +165,18 @@ Cursor-Tools/
 ├── main.py                     # Main application entry point
 ├── ui_manager.py              # User interface management
 ├── account_info_manager.py    # Account information handling
-├── device_id_modifier.py      # Device ID modification logic
+├── device_id_modifier.py      # Device ID modification logic (enhanced backup UI)
 ├── disable_update_manager.py  # Update disabling functionality
 ├── reset_machine_id_manager.py # Machine ID reset operations
+├── reset_machine_id.py        # Machine ID reset logic (with token reset)
+├── pro_features_manager.py    # Pro UI Features management (simplified output)
+├── pro_features.py           # Pro UI Features logic (token reset integration)
 ├── auto_update_manager.py     # Automatic update system
-├── registry_manager.py        # Windows registry operations
+├── registry_manager.py        # Windows registry operations (enhanced backup info)
 ├── acc_info.py               # Cursor account info retrieval
 ├── config.py                 # Configuration management
 ├── requirements.txt          # Python dependencies
-├── build_config.ini         # Build configuration
+├── build_config.ini         # Build configuration (v1.1.0)
 ├── build_script.py          # Automated build script
 ├── build.bat               # Windows build batch file
 ├── README.md              # This file

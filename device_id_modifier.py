@@ -85,40 +85,61 @@ class DeviceIDModifier:
         backups = self.registry_manager.list_backups()
 
         if not backups:
-            self.ui_manager.display_warning("No backup files found.")
+            self.ui_manager.display_warning("No Device ID backups found.")
+            self.ui_manager.display_info("Backups are automatically created when you use 'Change Device ID'.")
             return
 
-        # Display backup selection table
-        backup_table = Table(title="Available Backups", show_header=True, header_style="bold magenta")
-        backup_table.add_column("No", style="cyan", width=10)
-        backup_table.add_column("Filename", style="yellow", width=70)
-        backup_table.add_column("Date", style="green", width=50)
+        # Display available backups using the same format as Pro UI Features
+        from rich.table import Table
+        from rich.panel import Panel
+
+        backup_table = Table(show_header=True, box=None, padding=(0, 1))
+        backup_table.add_column("No.", style="cyan", width=4)
+        backup_table.add_column("Backup Name", style="white")
+        backup_table.add_column("Date", style="yellow")
+        backup_table.add_column("Files", style="green")
+        backup_table.add_column("Description", style="white")
 
         for i, backup in enumerate(backups, 1):
-            backup_table.add_row(str(i), backup['filename'], backup['date'])
+            backup_table.add_row(
+                str(i),
+                backup["name"][:30] + "..." if len(backup["name"]) > 30 else backup["name"],
+                backup["formatted_date"],
+                str(backup["file_count"]),
+                backup["description"][:40] + "..." if len(backup["description"]) > 40 else backup["description"]
+            )
 
-        self.ui_manager.console.print(backup_table)
-
-        # Get user selection
-        valid_choices = [str(i) for i in range(1, len(backups) + 1)] + ["0"]
-        choice = self.ui_manager.get_user_choice(
-            "Select backup to restore (0 to cancel)",
-            valid_choices=valid_choices
+        backup_panel = Panel(
+            backup_table,
+            title="[bold]Available Device ID Backups[/bold]",
+            border_style="bright_yellow",
+            padding=(1, 2)
         )
 
-        if choice == "0" or choice is None:
-            self.ui_manager.display_info("Restore operation cancelled.")
-            return
+        self.ui_manager.console.print(backup_panel)
 
-        selected_backup = backups[int(choice) - 1]
-
-        # Confirm restore
-        if not self.ui_manager.confirm_action(f"Restore from backup '{selected_backup['filename']}'?"):
-            self.ui_manager.display_info("Restore operation cancelled.")
-            return
-
-        # Perform restore
+        # Get user choice
         try:
+            choice = self.ui_manager.get_user_choice(
+                f"Select backup to restore (1-{len(backups)}) or 'c' to cancel",
+                valid_choices=[str(i) for i in range(1, len(backups) + 1)] + ["c", "C"]
+            )
+
+            if choice is None or choice.lower() == 'c':
+                self.ui_manager.display_info("Restore operation cancelled.")
+                return
+
+            selected_backup = backups[int(choice) - 1]
+
+            # Confirm restore
+            self.ui_manager.display_warning(f"This will restore backup: {selected_backup['name']}")
+            self.ui_manager.display_warning("Current Device ID registry values will be overwritten!")
+
+            if not self.ui_manager.confirm_action("Are you sure you want to restore this backup?"):
+                self.ui_manager.display_info("Restore operation cancelled.")
+                return
+
+            # Perform restore
             self.ui_manager.display_info("Restoring registry values from backup...")
 
             # Get current values before restore
@@ -131,11 +152,13 @@ class DeviceIDModifier:
                 # Get values after restore
                 after_values = self.registry_manager.read_registry_values()
 
-                self.ui_manager.display_success("Registry values successfully restored!")
+                self.ui_manager.display_success("Device ID registry values successfully restored!")
                 self.ui_manager.display_comparison(before_values, after_values)
             else:
                 self.ui_manager.display_error("Failed to restore registry values.")
 
+        except (ValueError, IndexError):
+            self.ui_manager.display_error("Invalid selection. Please try again.")
         except Exception as e:
             self.ui_manager.display_error(f"Restore failed: {str(e)}")
 

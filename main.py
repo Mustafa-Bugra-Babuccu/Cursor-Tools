@@ -11,6 +11,7 @@ from device_id_modifier import DeviceIDModifier
 from account_info_manager import AccountInfoManager
 from disable_update_manager import DisableUpdateManager
 from reset_machine_id_manager import ResetMachineIDManager
+from pro_features_manager import ProUIFeaturesMenuManager
 from auto_update_manager import AutoUpdateManager
 
 def is_admin():
@@ -46,6 +47,7 @@ class CursorToolsApp:
         self.account_info_manager = AccountInfoManager()
         self.disable_update_manager = DisableUpdateManager()
         self.reset_machine_id_manager = ResetMachineIDManager()
+        self.pro_features_manager = ProUIFeaturesMenuManager()
         self.auto_update_manager = AutoUpdateManager()
 
     def run(self):
@@ -81,7 +83,7 @@ class CursorToolsApp:
 
                 choice = self.ui_manager.get_user_choice(
                     "Select an option",
-                    valid_choices=["1", "2", "3", "4", "5"]
+                    valid_choices=["1", "2", "3", "4", "5", "6"]
                 )
 
                 if choice is None:  # User pressed Ctrl+C
@@ -96,6 +98,8 @@ class CursorToolsApp:
                 elif choice == "4":
                     self.reset_machine_id_manager.run_reset_machine_id_menu()
                 elif choice == "5":
+                    self.pro_features_manager.run_pro_ui_features_menu()
+                elif choice == "6":
                     self.exit_application()
                     break
 

@@ -5,7 +5,7 @@ block_cipher = None
 # Analysis configuration
 a = Analysis(
     ['main.py'],
-    pathex=['f:/All Projects/Python/Projects/Cursor-Tools'],
+    pathex=['E:/All Projects/Python/Projects/Cursor-Tools'],
     binaries=[],
     datas=[
         ('config.py', '.'),

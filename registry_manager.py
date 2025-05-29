@@ -181,7 +181,7 @@ class RegistryManager:
         return before_values, after_values
 
     def list_backups(self) -> list:
-        """List available backup files"""
+        """List available backup files with detailed information"""
         backups = []
         if os.path.exists(self.backup_dir):
             for filename in os.listdir(self.backup_dir):
@@ -190,11 +190,34 @@ class RegistryManager:
                     try:
                         with open(backup_path, 'r') as f:
                             backup_data = json.load(f)
+
+                        # Count registry entries
+                        registry_values = backup_data.get('registry_values', {})
+                        file_count = 0
+                        for path_values in registry_values.values():
+                            if isinstance(path_values, dict) and "Error" not in path_values:
+                                file_count += len(path_values)
+
+                        # Format timestamp for display
+                        timestamp = backup_data.get('timestamp', 'Unknown')
+                        try:
+                            if timestamp != 'Unknown':
+                                date_obj = datetime.strptime(timestamp, "%Y%m%d_%H%M%S")
+                                formatted_date = date_obj.strftime("%Y-%m-%d %H:%M")
+                            else:
+                                formatted_date = "Unknown"
+                        except:
+                            formatted_date = "Unknown"
+
                         backups.append({
+                            'name': filename.replace('.json', '').replace('registry_backup_', 'device_id_backup_'),
                             'filename': filename,
                             'path': backup_path,
                             'date': backup_data.get('backup_date', 'Unknown'),
-                            'timestamp': backup_data.get('timestamp', 'Unknown')
+                            'timestamp': timestamp,
+                            'formatted_date': formatted_date,
+                            'file_count': file_count,
+                            'description': f"Device ID registry backup with {file_count} registry entries"
                         })
                     except:
                         continue

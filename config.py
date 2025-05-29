@@ -51,13 +51,33 @@ class CursorToolsConfig:
 
         # Reset machine ID patterns for workbench.js modification
         self.reset_machine_id_patterns = {
-            r'B(k,D(Ln,{title:"Upgrade to Pro",size:"small",get codicon(){return A.rocket},get onClick(){return t.pay}}),null)': r'B(k,D(Ln,{title:"Mustafa Bugra Babuccu GitHub",size:"small",get codicon(){return A.github},get onClick(){return function(){window.open("https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools","_blank")}}}),null)',
-            r'M(x,I(as,{title:"Upgrade to Pro",size:"small",get codicon(){return $.rocket},get onClick(){return t.pay}}),null)': r'M(x,I(as,{title:"Mustafa Bugra Babuccu GitHub",size:"small",get codicon(){return $.rocket},get onClick(){return function(){window.open("https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools","_blank")}}}),null)',
+            r'B(k,D(Ln,{title:"Upgrade to Pro",size:"small",get codicon(){return A.rocket},get onClick(){return t.pay}}),null)': r'B(k,D(Ln,{title:"Unlocked",size:"small",get codicon(){return A.github},get onClick(){return function(){window.open("https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools","_blank")}}}),null)',
+            r'M(x,I(as,{title:"Upgrade to Pro",size:"small",get codicon(){return $.rocket},get onClick(){return t.pay}}),null)': r'M(x,I(as,{title:"Unlocked",size:"small",get codicon(){return $.rocket},get onClick(){return function(){window.open("https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools","_blank")}}}),null)',
             r'<div>Pro Trial': r'<div>Pro',
             r'py-1">Auto-select': r'py-1">Bypass-Version-Pin',
             r'async getEffectiveTokenLimit(e){const n=e.modelName;if(!n)return 2e5;': r'async getEffectiveTokenLimit(e){return 9000000;const n=e.modelName;if(!n)return 9e5;',
             r'var DWr=ne("<div class=settings__item_description>You are currently signed in with <strong></strong>.");': r'var DWr=ne("<div class=settings__item_description>You are currently signed in with <strong></strong>. <h1>Pro</h1>");',
             r'notifications-toasts': r'notifications-toasts hidden'
+        }
+
+        # Additional UI modification patterns from reset.js
+        self.ui_modification_patterns = {
+            # Pro Trial text replacements (from reset.js mc function)
+            r'Pro Trial': r'Pro',
+            r'"Pro Trial"': r'"Pro"',
+            r"'Pro Trial'": r"'Pro'",
+            # Additional Pro-related patterns
+            r'Upgrade to Pro': r'Pro Unlocked',
+            r'upgrade to pro': r'pro unlocked',
+            r'Trial expired': r'Pro Active',
+            r'trial expired': r'pro active',
+            r'Free plan': r'Pro plan',
+            r'free plan': r'pro plan',
+            # Additional patterns for comprehensive coverage
+            r'Start Pro Trial': r'Pro Active',
+            r'start pro trial': r'pro active',
+            r'Pro subscription': r'Pro unlocked',
+            r'pro subscription': r'pro unlocked'
         }
 
         # Reset main.js patterns for getMachineId modification
@@ -80,21 +100,52 @@ class CursorToolsConfig:
         }
 
     def _get_update_disabler_paths(self) -> Dict[str, str]:
-        """Get update disabler paths for Windows"""
+        """Get update disabler paths for Windows with automatic path detection"""
         localappdata = os.getenv("LOCALAPPDATA", "")
+
+        # Detect the correct Cursor installation path
+        base_path = self._detect_cursor_installation_path()
+
         return {
             'updater_path': os.path.join(localappdata, "cursor-updater"),
-            'update_yml_path': os.path.join(localappdata, "Programs", "Cursor", "resources", "app", "update.yml"),
-            'product_json_path': os.path.join(localappdata, "Programs", "Cursor", "resources", "app", "product.json")
+            'update_yml_path': os.path.join(base_path, "update.yml"),
+            'product_json_path': os.path.join(base_path, "product.json")
         }
 
-    def _get_reset_machine_id_paths(self) -> Dict[str, str]:
-        """Get reset machine ID paths for Windows"""
+    def _detect_cursor_installation_path(self) -> str:
+        """Detect Cursor installation path by checking multiple possible locations"""
         localappdata = os.getenv("LOCALAPPDATA", "")
+
+        # Possible Cursor installation paths (in order of preference)
+        possible_paths = [
+            # Old location (AppData/Local/Programs)
+            os.path.join(localappdata, "Programs", "Cursor", "resources", "app"),
+            # New location (Program Files)
+            r"C:\Program Files\cursor\resources\app",
+            # Alternative Program Files location
+            os.path.join(os.getenv("PROGRAMFILES", ""), "cursor", "resources", "app"),
+            # Alternative Program Files (x86) location
+            os.path.join(os.getenv("PROGRAMFILES(X86)", ""), "cursor", "resources", "app"),
+        ]
+
+        # Check each path and return the first one that exists
+        for path in possible_paths:
+            if path and os.path.exists(path):
+                # Verify it's a valid Cursor installation by checking for key files
+                package_json = os.path.join(path, "package.json")
+                main_js = os.path.join(path, "out", "main.js")
+                if os.path.exists(package_json) and os.path.exists(main_js):
+                    return path
+
+        # If no valid path found, return the first path for error handling
+        return possible_paths[0] if possible_paths else ""
+
+    def _get_reset_machine_id_paths(self) -> Dict[str, str]:
+        """Get reset machine ID paths for Windows with automatic path detection"""
         appdata = os.getenv("APPDATA", "")
 
-        # Base Cursor application directory
-        base_path = os.path.join(localappdata, "Programs", "Cursor", "resources", "app")
+        # Detect the correct Cursor installation path
+        base_path = self._detect_cursor_installation_path()
 
         return {
             'base_path': base_path,
@@ -102,7 +153,14 @@ class CursorToolsConfig:
             'main_path': os.path.join(base_path, "out", "main.js"),
             'workbench_path': os.path.join(base_path, "out", "vs", "workbench", "workbench.desktop.main.js"),
             'machine_id_path': os.path.join(appdata, "Cursor", "machineId"),
-            'reset_backups_dir': os.path.join(self.cursor_tools_dir, "reset_backups")
+            'reset_backups_dir': os.path.join(self.cursor_tools_dir, "reset_backups"),
+            # Additional UI modification paths (from reset.js)
+            'ui_out_path': os.path.join(base_path, "out"),
+            'ui_dist_path': os.path.join(base_path, "dist"),
+            # Storage configuration path
+            'storage_config_path': os.path.join(appdata, "Cursor", "User", "globalStorage", "storage.json"),
+            # Pro Features backup directory
+            'pro_backups_dir': os.path.join(self.cursor_tools_dir, "pro_backups")
         }
 
     def _ensure_directories_exist(self):
@@ -116,6 +174,9 @@ class CursorToolsConfig:
 
             # Create reset backups subdirectory
             Path(self.reset_machine_id_paths['reset_backups_dir']).mkdir(parents=True, exist_ok=True)
+
+            # Create pro features backups subdirectory
+            Path(self.reset_machine_id_paths['pro_backups_dir']).mkdir(parents=True, exist_ok=True)
 
         except Exception as e:
             raise Exception(f"Failed to create directory structure: {str(e)}")
@@ -144,6 +205,16 @@ class CursorToolsConfig:
             'patch_main_js_file': 'true'
         }
 
+        self.config['ProFeatures'] = {
+            'create_backup_before_apply': 'true',
+            'backup_retention_days': '30',
+            'auto_cleanup_old_backups': 'true',
+            'backup_ui_files': 'true',
+            'backup_database_files': 'true',
+            'backup_storage_config': 'true',
+            'confirm_before_restore': 'true'
+        }
+
         self.config['AutoUpdate'] = {
             'check_on_startup': 'true',
             'force_update_policy': 'true',
@@ -157,6 +228,7 @@ class CursorToolsConfig:
             'backup_directory': self.backups_dir,
             'cursor_tools_directory': self.cursor_tools_dir,
             'reset_backups_directory': self.reset_machine_id_paths['reset_backups_dir'],
+            'pro_backups_directory': self.reset_machine_id_paths['pro_backups_dir'],
             'cursor_base_path': self.reset_machine_id_paths['base_path'],
             'cursor_package_json': self.reset_machine_id_paths['pkg_path'],
             'cursor_main_js': self.reset_machine_id_paths['main_path'],
@@ -193,6 +265,65 @@ class CursorToolsConfig:
             self.config[section] = {}
         self.config[section][key] = value
         self.save_config()
+
+    def get_cursor_installation_info(self) -> Dict[str, Any]:
+        """Get diagnostic information about Cursor installation paths"""
+        localappdata = os.getenv("LOCALAPPDATA", "")
+
+        # All possible paths to check
+        paths_to_check = [
+            {
+                "name": "Old Location (AppData)",
+                "path": os.path.join(localappdata, "Programs", "Cursor", "resources", "app"),
+                "description": "Legacy Cursor installation path"
+            },
+            {
+                "name": "New Location (Program Files)",
+                "path": r"C:\Program Files\cursor\resources\app",
+                "description": "Current Cursor installation path"
+            },
+            {
+                "name": "Alternative Program Files",
+                "path": os.path.join(os.getenv("PROGRAMFILES", ""), "cursor", "resources", "app"),
+                "description": "Alternative Program Files location"
+            },
+            {
+                "name": "Program Files (x86)",
+                "path": os.path.join(os.getenv("PROGRAMFILES(X86)", ""), "cursor", "resources", "app"),
+                "description": "32-bit Program Files location"
+            }
+        ]
+
+        detected_path = self._detect_cursor_installation_path()
+
+        info = {
+            "detected_path": detected_path,
+            "detected_path_exists": os.path.exists(detected_path) if detected_path else False,
+            "checked_locations": []
+        }
+
+        for path_info in paths_to_check:
+            path = path_info["path"]
+            exists = os.path.exists(path) if path else False
+            valid = False
+
+            if exists:
+                # Check if it's a valid Cursor installation
+                package_json = os.path.join(path, "package.json")
+                main_js = os.path.join(path, "out", "main.js")
+                workbench_js = os.path.join(path, "out", "vs", "workbench", "workbench.desktop.main.js")
+                valid = all(os.path.exists(f) for f in [package_json, main_js, workbench_js])
+
+            info["checked_locations"].append({
+                "name": path_info["name"],
+                "path": path,
+                "description": path_info["description"],
+                "exists": exists,
+                "valid_installation": valid,
+                "is_detected": path == detected_path
+            })
+
+        return info
 
 # Global configuration instance
 config = CursorToolsConfig()

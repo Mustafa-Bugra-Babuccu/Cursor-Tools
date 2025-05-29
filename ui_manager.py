@@ -48,7 +48,8 @@ class UIManager:
         menu_table.add_row("2.", "Device ID Modifier")
         menu_table.add_row("3.", "Disable Auto Update")
         menu_table.add_row("4.", "Reset Machine ID")
-        menu_table.add_row("5.", "Exit Application")
+        menu_table.add_row("5.", "Pro UI Features")
+        menu_table.add_row("6.", "Exit Application")
 
         menu_panel = Panel(
             menu_table,
