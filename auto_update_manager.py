@@ -23,6 +23,7 @@ from rich.align import Align
 
 from ui_manager import UIManager
 from config import config, config_manager
+from language_manager import language_manager
 
 
 class AutoUpdateManager:
@@ -75,7 +76,7 @@ class AutoUpdateManager:
             Dict with update information if available, None otherwise
         """
         try:
-            self.ui_manager.display_info("Checking for updates...")
+            self.ui_manager.display_text('app.update_check', "info")
 
             # Get request configuration
             request_config = config_manager.get_request_config()
@@ -97,7 +98,7 @@ class AutoUpdateManager:
                         "download_url": self._get_download_url(release_data.get("assets", []))
                     }
                 else:
-                    self.ui_manager.display_success("You are running the latest version!")
+                    self.ui_manager.display_update_no_available_with_auto_hide()
                     return None
 
             elif response.status_code == 403:
@@ -139,7 +140,8 @@ class AutoUpdateManager:
             Dict with update information if available, None otherwise
         """
         try:
-            self.ui_manager.display_info("Retrying update check with SSL verification disabled...")
+            retry_msg = "Retrying update check with SSL verification disabled..."
+            self.ui_manager.display_info(retry_msg)
 
             # Get fallback request configuration (SSL disabled)
             request_config = config_manager.get_fallback_request_config()
@@ -162,7 +164,7 @@ class AutoUpdateManager:
                         "download_url": self._get_download_url(release_data.get("assets", []))
                     }
                 else:
-                    self.ui_manager.display_success("You are running the latest version!")
+                    self.ui_manager.display_update_no_available_with_auto_hide()
                     return None
 
             elif response.status_code == 403:
@@ -279,7 +281,8 @@ class AutoUpdateManager:
             Path to downloaded file if successful, None otherwise
         """
         try:
-            self.ui_manager.display_info(f"Downloading Cursor-Tools v{version}...")
+            download_msg = f"Downloading Cursor-Tools v{version}..."
+            self.ui_manager.display_info(download_msg)
 
             # Prepare download path
             filename = f"Cursor-Tools-v{version}.exe"
@@ -418,7 +421,7 @@ class AutoUpdateManager:
             True if installation was successful, False otherwise
         """
         try:
-            self.ui_manager.display_info("Installing update...")
+            self.ui_manager.display_text('app.update_installing', "info")
 
             # Get current executable path
             if getattr(sys, 'frozen', False):

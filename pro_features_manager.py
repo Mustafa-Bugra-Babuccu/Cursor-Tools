@@ -6,6 +6,7 @@ Integrates Pro UI features functionality into the main application
 from datetime import datetime
 from pro_features import ProUIFeaturesManager
 from ui_manager import UIManager
+from language_manager import language_manager
 
 class ProUIFeaturesMenuManager:
     def __init__(self):
@@ -20,7 +21,6 @@ class ProUIFeaturesMenuManager:
             self.display_pro_ui_features_menu()
 
             choice = self.ui_manager.get_user_choice(
-                "Select an option",
                 valid_choices=["1", "2", "3"]
             )
 
@@ -37,7 +37,7 @@ class ProUIFeaturesMenuManager:
                 self.ui_manager.pause()
 
     def display_pro_ui_features_menu(self):
-        """Display the Pro UI Features sub-menu"""
+        """Display the Pro UI Features sub-menu with language support"""
         from rich.table import Table
         from rich.panel import Panel
 
@@ -45,13 +45,13 @@ class ProUIFeaturesMenuManager:
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "Pro UI Features")
-        menu_table.add_row("2.", "Restore Backup")
-        menu_table.add_row("3.", "Return to Main Menu")
+        menu_table.add_row("1.", self.ui_manager.lang.get_text('pro.apply_features'))
+        menu_table.add_row("2.", self.ui_manager.lang.get_text('pro.restore_backup'))
+        menu_table.add_row("3.", self.ui_manager.lang.get_text('pro.return_main'))
 
         menu_panel = Panel(
             menu_table,
-            title="[bold]Pro UI Features[/bold]",
+            title=f"[bold]{self.ui_manager.lang.get_text('pro.title')}[/bold]",
             border_style="bright_magenta",
             padding=(1, 2)
         )
@@ -64,23 +64,27 @@ class ProUIFeaturesMenuManager:
         self.ui_manager.display_header()
 
         # Show warning about administrator privileges
-        self.ui_manager.display_warning("This operation requires administrator privileges and will modify Cursor files.")
+        warning_msg = self.ui_manager.lang.get_text('pro.admin_warning')
+        self.ui_manager.display_warning(warning_msg)
 
-        if not self.ui_manager.confirm_action("Do you want to continue with applying all Pro UI features?"):
-            self.ui_manager.display_info("Operation cancelled by user.")
+        confirm_msg = self.ui_manager.lang.get_text('pro.continue_confirm')
+        if not self.ui_manager.confirm_action(confirm_msg):
+            self.ui_manager.display_text('pro.operation_cancelled', "info")
             return
 
         try:
             success = self.pro_features_manager.apply_pro_features(silent=True)
 
             if success:
-                self.ui_manager.display_success("✓ Pro UI features applied successfully")
-                self.ui_manager.display_info("Please restart Cursor to see the changes.")
+                success_msg = f"✓ {self.ui_manager.lang.get_text('pro.applied_success')}"
+                self.ui_manager.display_success(success_msg)
+                self.ui_manager.display_text('pro.restart_cursor', "info")
             else:
                 self.ui_manager.display_warning("✓ Operation completed successfully")
 
         except Exception as e:
-            self.ui_manager.display_error(f"Failed to apply Pro UI features: {str(e)}")
+            error_msg = self.ui_manager.lang.get_text('pro.apply_failed', error=str(e))
+            self.ui_manager.display_error(f"Failed to apply Pro UI features: {error_msg}")
 
     def restore_pro_ui_features_backup(self):
         """Restore a Pro UI Features backup"""
@@ -91,8 +95,8 @@ class ProUIFeaturesMenuManager:
         backups = self.pro_features_manager.backup_manager.list_backups()
 
         if not backups:
-            self.ui_manager.display_warning("No Pro UI Features backups found.")
-            self.ui_manager.display_info("Backups are automatically created when you use 'Apply All Pro UI Features'.")
+            self.ui_manager.display_text('pro.no_backups', "warning")
+            self.ui_manager.display_text('pro.backups_info', "info")
             return
 
         # Display available backups
@@ -128,7 +132,7 @@ class ProUIFeaturesMenuManager:
 
         backup_panel = Panel(
             backup_table,
-            title="[bold]Available Pro UI Features Backups[/bold]",
+            title=f"[bold]{self.ui_manager.lang.get_text('pro.available_backups')}[/bold]",
             border_style="bright_magenta",
             padding=(1, 2)
         )
@@ -137,38 +141,41 @@ class ProUIFeaturesMenuManager:
 
         # Get user choice
         try:
+            prompt_msg = self.ui_manager.lang.get_text('pro.select_backup', count=len(backups))
             choice = self.ui_manager.get_user_choice(
-                f"Select backup to restore (1-{len(backups)}) or 'c' to cancel",
+                prompt_msg,
                 valid_choices=[str(i) for i in range(1, len(backups) + 1)] + ["c", "C"]
             )
 
             if choice is None or choice.lower() == 'c':
-                self.ui_manager.display_info("Backup restoration cancelled.")
+                self.ui_manager.display_text('pro.backup_cancelled', "info")
                 return
 
             selected_backup = backups[int(choice) - 1]
 
             # Confirm restoration
-            self.ui_manager.display_warning(f"This will restore backup: {selected_backup['name']}")
-            self.ui_manager.display_warning("Current Pro UI Features files will be overwritten!")
+            warning_msg = self.ui_manager.lang.get_text('pro.restore_warning', name=selected_backup['name'])
+            self.ui_manager.display_warning(warning_msg)
+            self.ui_manager.display_text('pro.overwrite_warning', "warning")
 
-            if not self.ui_manager.confirm_action("Are you sure you want to restore this backup?"):
-                self.ui_manager.display_info("Backup restoration cancelled.")
+            confirm_msg = self.ui_manager.lang.get_text('pro.restore_confirm')
+            if not self.ui_manager.confirm_action(confirm_msg):
+                self.ui_manager.display_text('pro.backup_cancelled', "info")
                 return
 
             # Perform restoration
             success = self.pro_features_manager.backup_manager.restore_backup(selected_backup["name"])
 
             if success:
-                self.ui_manager.display_success("Pro UI Features backup restored successfully!")
-                self.ui_manager.display_info("Please restart Cursor to see the restored changes.")
+                self.ui_manager.display_text('pro.restore_success', "success")
+                self.ui_manager.display_text('pro.restore_restart', "info")
             else:
-                self.ui_manager.display_warning("Backup restoration completed with some warnings. Check the output above for details.")
+                self.ui_manager.display_text('pro.restore_warnings', "warning")
 
         except (ValueError, IndexError):
-            self.ui_manager.display_error("Invalid selection. Please try again.")
+            self.ui_manager.display_text('pro.invalid_selection', "error")
         except Exception as e:
-            self.ui_manager.display_error(f"Failed to restore backup: {str(e)}")
+            self.ui_manager.display_text('pro.restore_failed', "error", error=str(e))
 
 
 

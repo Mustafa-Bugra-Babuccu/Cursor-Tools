@@ -17,6 +17,7 @@ from disable_update_manager import DisableUpdateManager
 from reset_machine_id_manager import ResetMachineIDManager
 from pro_features_manager import ProUIFeaturesMenuManager
 from auto_update_manager import AutoUpdateManager
+from language_manager import LanguageSettingsManager
 from utils import is_admin, run_as_admin
 
 class CursorToolsApp:
@@ -28,6 +29,7 @@ class CursorToolsApp:
         self.reset_machine_id_manager = ResetMachineIDManager()
         self.pro_features_manager = ProUIFeaturesMenuManager()
         self.auto_update_manager = AutoUpdateManager()
+        self.language_settings_manager = LanguageSettingsManager()
 
     def run(self):
         """Main application loop"""
@@ -61,8 +63,7 @@ class CursorToolsApp:
                 self.ui_manager.display_main_menu()
 
                 choice = self.ui_manager.get_user_choice(
-                    "Select an option",
-                    valid_choices=["1", "2", "3", "4", "5", "6"]
+                    valid_choices=["1", "2", "3", "4", "5", "6", "7"]
                 )
 
                 if choice is None:  # User pressed Ctrl+C
@@ -79,6 +80,8 @@ class CursorToolsApp:
                 elif choice == "5":
                     self.pro_features_manager.run_pro_ui_features_menu()
                 elif choice == "6":
+                    self.language_settings_manager.run_language_settings_menu()
+                elif choice == "7":
                     self.exit_application()
                     break
 
@@ -93,9 +96,11 @@ class CursorToolsApp:
         self.ui_manager.clear_screen()
         self.ui_manager.display_header()
 
-        if self.ui_manager.confirm_action("Are you sure you want to exit?"):
-            self.ui_manager.display_info("Thank you for using Cursor-Tools!")
-            self.ui_manager.console.print("\n[dim]Cursor's Best All-in-One Tool[/dim]")
+        confirm_msg = self.ui_manager.lang.get_text('common.confirm_exit')
+        if self.ui_manager.confirm_action(confirm_msg):
+            self.ui_manager.display_text('app.thank_you', "info")
+            subtitle = self.ui_manager.lang.get_text('app.subtitle')
+            self.ui_manager.console.print(f"\n[dim]{subtitle}[/dim]")
             sys.exit(0)
 
 def main():

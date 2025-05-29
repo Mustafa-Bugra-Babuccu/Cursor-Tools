@@ -1,28 +1,32 @@
 """
 UI Manager for Cursor-Tools Application
-Handles all user interface styling and menu management
+Handles all user interface styling and menu management with language support
 """
 
 import os
+import time
+import threading
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.align import Align
+from language_manager import language_manager
 
 class UIManager:
     def __init__(self):
         self.console = Console()
+        self.lang = language_manager
 
     def clear_screen(self):
         """Clear the terminal screen"""
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def display_header(self):
-        """Display application header"""
-        header_text = Text("        Cursor-Tools", style="bold cyan")
-        header_text.append("\nCursor's Best All-in-One Tool", style="dim")
+        """Display application header with language support"""
+        header_text = Text(f"        {self.lang.get_text('app.title')}", style="bold cyan")
+        header_text.append(f"\n{self.lang.get_text('app.subtitle')}", style="dim")
 
         header_panel = Panel(
             Align.center(header_text),
@@ -35,41 +39,70 @@ class UIManager:
         self.console.print()
 
     def display_main_menu(self):
-        """Display the main menu options"""
+        """Display the main menu options with language support"""
         menu_table = Table(show_header=False, box=None, padding=(0, 2))
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "Account Info")
-        menu_table.add_row("2.", "Device ID Modifier")
-        menu_table.add_row("3.", "Disable Auto Update")
-        menu_table.add_row("4.", "Reset Machine ID")
-        menu_table.add_row("5.", "Pro UI Features")
-        menu_table.add_row("6.", "Exit Application")
+        menu_table.add_row("1.", self.lang.get_text('menu.account_info'))
+        menu_table.add_row("2.", self.lang.get_text('menu.device_id'))
+        menu_table.add_row("3.", self.lang.get_text('menu.disable_updates'))
+        menu_table.add_row("4.", self.lang.get_text('menu.reset_machine_id'))
+        menu_table.add_row("5.", self.lang.get_text('menu.pro_features'))
+        menu_table.add_row("6.", self.lang.get_text('menu.language_settings'))
+        menu_table.add_row("7.", self.lang.get_text('menu.exit'))
 
         menu_panel = Panel(
             menu_table,
-            title="[bold]Main Menu[/bold]",
+            title=f"[bold]{self.lang.get_text('menu.title')}[/bold]",
             border_style="green",
             padding=(1, 2)
         )
 
         self.console.print(menu_panel)
 
-    def display_device_id_menu(self):
-        """Display the Device ID Modifier sub-menu"""
+    def display_language_menu(self):
+        """Display the language settings menu"""
         menu_table = Table(show_header=False, box=None, padding=(0, 2))
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "Change Device ID")
-        menu_table.add_row("2.", "Restore Backup")
-        menu_table.add_row("3.", "View Current Registry Values")
-        menu_table.add_row("4.", "Return to Main Menu")
+        # Show current language
+        current_lang = self.lang.get_current_language_name()
+        menu_table.add_row("", f"{self.lang.get_text('lang.current', language=current_lang)}")
+        menu_table.add_row("", "")  # Empty row for spacing
+
+        # Show language options
+        language_options = self.lang.get_language_menu_options()
+        for option_num, language_name in language_options.items():
+            menu_table.add_row(f"{option_num}.", language_name)
+
+        menu_table.add_row("", "")  # Empty row for spacing
+        menu_table.add_row("0.", self.lang.get_text('menu.exit'))
 
         menu_panel = Panel(
             menu_table,
-            title="[bold]Device ID Modifier[/bold]",
+            title=f"[bold]{self.lang.get_text('lang.title')}[/bold]",
+            border_style="blue",
+            padding=(1, 2)
+        )
+
+        self.console.print(menu_panel)
+
+    def display_device_id_menu(self):
+        """Display the Device ID Modifier sub-menu with language support"""
+        menu_table = Table(show_header=False, box=None, padding=(0, 2))
+        menu_table.add_column("Option", style="cyan", width=4)
+        menu_table.add_column("Description", style="white")
+
+        menu_table.add_row("1.", self.lang.get_text('device.change_id'))
+        menu_table.add_row("2.", self.lang.get_text('device.restore_backup'))
+        menu_table.add_row("3.", self.lang.get_text('device.view_current'))
+        menu_table.add_row("4.", self.lang.get_text('device.return_main'))
+
+        menu_panel = Panel(
+            menu_table,
+            title=f"[bold]{self.lang.get_text('device.title')}[/bold]",
             border_style="yellow",
             padding=(1, 2)
         )
@@ -77,17 +110,17 @@ class UIManager:
         self.console.print(menu_panel)
 
     def display_account_info_menu(self):
-        """Display the Account Info sub-menu"""
+        """Display the Account Info sub-menu with language support"""
         menu_table = Table(show_header=False, box=None, padding=(0, 2))
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "View Account Information")
-        menu_table.add_row("2.", "Return to Main Menu")
+        menu_table.add_row("1.", self.lang.get_text('account.view_info'))
+        menu_table.add_row("2.", self.lang.get_text('account.return_main'))
 
         menu_panel = Panel(
             menu_table,
-            title="[bold]Account Info[/bold]",
+            title=f"[bold]{self.lang.get_text('account.title')}[/bold]",
             border_style="blue",
             padding=(1, 2)
         )
@@ -95,17 +128,17 @@ class UIManager:
         self.console.print(menu_panel)
 
     def display_disable_update_menu(self):
-        """Display the Disable Auto Update sub-menu"""
+        """Display the Disable Auto Update sub-menu with language support"""
         menu_table = Table(show_header=False, box=None, padding=(0, 2))
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "Disable Cursor Auto Update")
-        menu_table.add_row("2.", "Return to Main Menu")
+        menu_table.add_row("1.", self.lang.get_text('update.disable_auto'))
+        menu_table.add_row("2.", self.lang.get_text('update.return_main'))
 
         menu_panel = Panel(
             menu_table,
-            title="[bold]Disable Auto Update[/bold]",
+            title=f"[bold]{self.lang.get_text('update.title')}[/bold]",
             border_style="red",
             padding=(1, 2)
         )
@@ -113,36 +146,39 @@ class UIManager:
         self.console.print(menu_panel)
 
     def display_reset_machine_id_menu(self):
-        """Display the Reset Machine ID sub-menu"""
+        """Display the Reset Machine ID sub-menu with language support"""
         menu_table = Table(show_header=False, box=None, padding=(0, 2))
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "Reset Machine ID")
-        menu_table.add_row("2.", "Restore Backup")
-        menu_table.add_row("3.", "View Current Machine ID Values")
-        menu_table.add_row("4.", "Return to Main Menu")
+        menu_table.add_row("1.", self.lang.get_text('reset.reset_id'))
+        menu_table.add_row("2.", self.lang.get_text('reset.restore_backup'))
+        menu_table.add_row("3.", self.lang.get_text('reset.view_current'))
+        menu_table.add_row("4.", self.lang.get_text('reset.return_main'))
 
         menu_panel = Panel(
             menu_table,
-            title="[bold]Reset Machine ID[/bold]",
+            title=f"[bold]{self.lang.get_text('reset.title')}[/bold]",
             border_style="magenta",
             padding=(1, 2)
         )
 
         self.console.print(menu_panel)
 
-    def get_user_choice(self, prompt_text="Enter your choice", valid_choices=None):
-        """Get user input with validation"""
+    def get_user_choice(self, prompt_key="menu.select_option", valid_choices=None):
+        """Get user input with validation and language support"""
         while True:
             try:
+                prompt_text = self.lang.get_text(prompt_key)
                 choice = Prompt.ask(f"[bold green]{prompt_text}[/bold green]")
                 if valid_choices and choice not in valid_choices:
-                    self.console.print(f"[red]Invalid choice. Please select from: {', '.join(valid_choices)}[/red]")
+                    invalid_msg = self.lang.get_text('menu.invalid_choice')
+                    self.console.print(f"[red]{invalid_msg}[/red]")
                     continue
                 return choice
             except KeyboardInterrupt:
-                self.console.print("\n[yellow]Operation cancelled by user.[/yellow]")
+                cancelled_msg = self.lang.get_text('common.operation_cancelled')
+                self.console.print(f"\n[yellow]{cancelled_msg}[/yellow]")
                 return None
 
     def confirm_action(self, message):
@@ -165,30 +201,43 @@ class UIManager:
         """Display info message"""
         self.console.print(f"[bold blue]ℹ {message}[/bold blue]")
 
-    def display_localized_error(self, key: str, translator=None, **kwargs):
-        """Display localized error message"""
-        message = translator.get(key, **kwargs) if translator else key
-        self.display_error(message)
+    def display_text(self, key: str, message_type="info", **kwargs):
+        """Display localized text with specified message type and optional auto-hide"""
+        message = self.lang.get_text(key, **kwargs)
 
-    def display_localized_warning(self, key: str, translator=None, **kwargs):
-        """Display localized warning message"""
-        message = translator.get(key, **kwargs) if translator else key
-        self.display_warning(message)
+        if message_type == "error":
+            self.display_error(message)
+        elif message_type == "warning":
+            self.display_warning(message)
+        elif message_type == "success":
+            self.display_success(message)
+        elif message_type == "step":
+            self.console.print(f"[cyan]ℹ {message}...[/cyan]")
+        else:  # info
+            self.display_info(message)
 
-    def display_localized_info(self, key: str, translator=None, **kwargs):
-        """Display localized info message"""
-        message = translator.get(key, **kwargs) if translator else key
-        self.display_info(message)
-
-    def display_localized_success(self, key: str, translator=None, **kwargs):
-        """Display localized success message"""
-        message = translator.get(key, **kwargs) if translator else key
+    def display_update_no_available_with_auto_hide(self):
+        """Display 'No updates available' message with 3-second auto-hide"""
+        # Display the message
+        message = self.lang.get_text('app.update_not_available')
         self.display_success(message)
 
-    def display_step_info(self, step_key: str, translator=None, **kwargs):
-        """Display step information with cyan formatting"""
-        message = translator.get(step_key, **kwargs) if translator else step_key
-        self.console.print(f"[cyan]ℹ {message}...[/cyan]")
+        # Start auto-hide timer
+        def hide_after_delay():
+            time.sleep(3)  # Wait exactly 3 seconds
+            # Don't clear screen, just return to caller
+            # The caller should handle returning to main menu
+
+        # Start the timer in a separate thread
+        timer_thread = threading.Thread(target=hide_after_delay, daemon=True)
+        timer_thread.start()
+
+        # Wait for the timer to complete (blocking)
+        timer_thread.join()
+
+        # Now clear screen and return to main menu
+        self.clear_screen()
+        self.display_header()
 
     def display_registry_values(self, title, values_dict):
         """Display registry values in a formatted table with consistent width"""
@@ -217,8 +266,9 @@ class UIManager:
         self.console.print("\n[bold green]AFTER:[/bold green]")
         self.display_registry_values("Modified Values", after_values)
 
-    def pause(self, message="Press Enter to continue..."):
-        """Pause execution and wait for user input"""
+    def pause(self, message_key="common.press_enter"):
+        """Pause execution and wait for user input with language support"""
+        message = self.lang.get_text(message_key)
         Prompt.ask(f"[dim]{message}[/dim]", default="")
 
     def display_admin_warning(self):

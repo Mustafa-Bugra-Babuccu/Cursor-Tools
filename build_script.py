@@ -41,12 +41,14 @@ class CursorToolsBuilder:
             "acc_info.py",
             "disable_update_manager.py",
             "disable_update.py",
+            "language_manager.py",
             "reset_machine_id_manager.py",
             "reset_machine_id.py",
             "pro_features_manager.py",
             "pro_features.py",
             "auto_update_manager.py",
             "auto_update_config.py",
+            "utils.py",
             "requirements.txt"
         ]
 

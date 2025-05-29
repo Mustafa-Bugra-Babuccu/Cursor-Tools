@@ -14,12 +14,13 @@ from datetime import datetime, timedelta
 from config import config
 from utils import get_workbench_cursor_path, FileManager, BackupManager
 from ui_manager import UIManager
+from language_manager import language_manager
 
 # Removed find_ui_files() - now using utils.FileManager.find_files_by_pattern()
 
 
 
-def modify_workbench_js(file_path: str, translator=None, silent=False, ui_manager=None) -> bool:
+def modify_workbench_js(file_path: str, silent=False, ui_manager=None) -> bool:
     """Modify workbench file content with Pro patterns"""
     if ui_manager is None:
         ui_manager = UIManager()
@@ -63,7 +64,7 @@ def modify_workbench_js(file_path: str, translator=None, silent=False, ui_manage
 
     except Exception as e:
         if not silent:
-            ui_manager.display_localized_error('pro.modify_file_failed', translator, error=str(e))
+            ui_manager.display_text('pro.modify_file_failed', "error", error=str(e))
         if "tmp_path" in locals():
             try:
                 os.unlink(tmp_path)
@@ -71,14 +72,14 @@ def modify_workbench_js(file_path: str, translator=None, silent=False, ui_manage
                 pass
         return False
 
-def modify_ui_files(translator=None, silent=False, ui_manager=None) -> bool:
+def modify_ui_files(silent=False, ui_manager=None) -> bool:
     """Comprehensive UI modification based on reset.js mc function"""
     if ui_manager is None:
         ui_manager = UIManager()
 
     try:
         if not silent:
-            ui_manager.display_step_info('pro.ui_customization', translator)
+            ui_manager.display_text('pro.ui_customization', "step")
 
         # Get UI paths from config
         reset_paths = config.reset_machine_id_paths
@@ -95,7 +96,7 @@ def modify_ui_files(translator=None, silent=False, ui_manager=None) -> bool:
                 continue
 
             if not silent:
-                ui_manager.display_step_info('pro.searching_in', translator, path=base_path)
+                ui_manager.display_text('pro.searching_in', "step", path=base_path)
 
             # Find JS and HTML files
             js_files = FileManager.find_files_by_pattern(base_path, patterns=[], extensions=['.js'])
@@ -127,31 +128,30 @@ def modify_ui_files(translator=None, silent=False, ui_manager=None) -> bool:
                             f.write(new_content)
 
                         if not silent:
-                            ui_manager.display_localized_success('pro.ui_file_modified', translator, file=file_path)
+                            ui_manager.display_text('pro.ui_file_modified', "success", file=file_path)
                         modified_files += 1
 
                 except Exception as err:
                     if not silent:
-                        ui_manager.display_localized_warning('pro.ui_file_error', translator, file=file_path, error=str(err))
+                        ui_manager.display_text('pro.ui_file_error', "warning", file=file_path, error=str(err))
 
         if not silent:
             if modified_files == 0:
-                ui_manager.display_localized_warning('pro.no_ui_files', translator)
+                ui_manager.display_text('pro.no_ui_files', "warning")
             else:
-                ui_manager.display_localized_success('pro.ui_customization_complete', translator, count=modified_files)
+                ui_manager.display_text('pro.ui_customization_complete', "success", count=modified_files)
 
         return True
 
     except Exception as e:
         if not silent:
-            ui_manager.display_localized_error('pro.ui_customization_failed', translator, error=str(e))
+            ui_manager.display_text('pro.ui_customization_failed', "error", error=str(e))
         return False
 
 class ProUIFeaturesBackupManager:
     """Manages backups for Pro UI Features modifications"""
 
-    def __init__(self, translator=None):
-        self.translator = translator
+    def __init__(self):
         self.ui_manager = UIManager()
         self.backup_manager = BackupManager(config.reset_machine_id_paths['pro_backups_dir'])
         self.backup_dir = config.reset_machine_id_paths['pro_backups_dir']
@@ -304,7 +304,7 @@ class ProUIFeaturesBackupManager:
             return backups
 
         except Exception as e:
-            self.ui_manager.display_localized_error('pro.list_backups_failed', self.translator, error=str(e))
+            self.ui_manager.display_text('pro.list_backups_failed', "error", error=str(e))
             return []
 
     def restore_backup(self, backup_name: str) -> bool:
@@ -314,14 +314,14 @@ class ProUIFeaturesBackupManager:
             manifest_path = os.path.join(backup_path, "backup_manifest.json")
 
             if not os.path.exists(backup_path) or not os.path.exists(manifest_path):
-                print(f"{Fore.RED}✗ {self.translator.get('pro.backup_not_found', name=backup_name) if self.translator else f'Backup not found: {backup_name}'}{Style.RESET_ALL}")
+                self.ui_manager.display_text('pro.backup_not_found', "error", name=backup_name)
                 return False
 
             # Load manifest
             with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
 
-            print(f"{Fore.CYAN}ℹ {self.translator.get('pro.restoring_backup', name=backup_name) if self.translator else f'Restoring backup: {backup_name}'}...{Style.RESET_ALL}")
+            self.ui_manager.display_text('pro.restoring_backup', "step", name=backup_name)
 
             restored_files = 0
             failed_files = 0
@@ -341,26 +341,26 @@ class ProUIFeaturesBackupManager:
                         restored_files += 1
 
                         file_type = file_info.get("type", "unknown")
-                        self.ui_manager.display_localized_success('pro.restored_file', self.translator, type=file_type, file=os.path.basename(original_file))
+                        self.ui_manager.display_text('pro.restored_file', "success", type=file_type, file=os.path.basename(original_file))
                     else:
                         backup_file_name = file_info['backup']
-                        self.ui_manager.display_localized_warning('pro.backup_file_missing', self.translator, file=backup_file_name)
+                        self.ui_manager.display_text('pro.backup_file_missing', "warning", file=backup_file_name)
                         failed_files += 1
 
                 except Exception as e:
                     backup_file_name = file_info.get('backup', 'unknown')
-                    self.ui_manager.display_localized_error('pro.restore_file_failed', self.translator, file=backup_file_name, error=str(e))
+                    self.ui_manager.display_text('pro.restore_file_failed', "error", file=backup_file_name, error=str(e))
                     failed_files += 1
 
             if failed_files == 0:
-                self.ui_manager.display_localized_success('pro.restore_success', self.translator, count=restored_files)
+                self.ui_manager.display_text('pro.restore_success', "success", count=restored_files)
                 return True
             else:
-                self.ui_manager.display_localized_warning('pro.restore_partial', self.translator, restored=restored_files, failed=failed_files)
+                self.ui_manager.display_text('pro.restore_partial', "warning", restored=restored_files, failed=failed_files)
                 return False
 
         except Exception as e:
-            self.ui_manager.display_localized_error('pro.restore_failed', self.translator, error=str(e))
+            self.ui_manager.display_text('pro.restore_failed', "error", error=str(e))
             return False
 
     def delete_backup(self, backup_name: str) -> bool:
@@ -369,15 +369,15 @@ class ProUIFeaturesBackupManager:
             backup_path = os.path.join(self.backup_dir, backup_name)
 
             if not os.path.exists(backup_path):
-                self.ui_manager.display_localized_error('pro.backup_not_found', self.translator, name=backup_name)
+                self.ui_manager.display_text('pro.backup_not_found', "error", name=backup_name)
                 return False
 
             shutil.rmtree(backup_path)
-            self.ui_manager.display_localized_success('pro.backup_deleted', self.translator, name=backup_name)
+            self.ui_manager.display_text('pro.backup_deleted', "success", name=backup_name)
             return True
 
         except Exception as e:
-            self.ui_manager.display_localized_error('pro.delete_backup_failed', self.translator, name=backup_name, error=str(e))
+            self.ui_manager.display_text('pro.delete_backup_failed', "error", name=backup_name, error=str(e))
             return False
 
     def cleanup_old_backups(self, retention_days: int = 30) -> int:
@@ -401,37 +401,37 @@ class ProUIFeaturesBackupManager:
                     continue
                 except Exception as e:
                     backup_name = backup['name']
-                    print(f"{Fore.YELLOW}⚠ {self.translator.get('pro.cleanup_warning', backup=backup_name, error=str(e)) if self.translator else f'Warning cleaning up {backup_name}: {e}'}{Style.RESET_ALL}")
+                    self.ui_manager.display_text('pro.cleanup_warning', "warning", backup=backup_name, error=str(e))
 
             if deleted_count > 0:
-                print(f"{Fore.GREEN}✓ {self.translator.get('pro.cleanup_success', count=deleted_count) if self.translator else f'Cleaned up {deleted_count} old backups'}{Style.RESET_ALL}")
+                self.ui_manager.display_text('pro.cleanup_success', "success", count=deleted_count)
 
             return deleted_count
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('pro.cleanup_failed', error=str(e)) if self.translator else f'Backup cleanup failed: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_text('pro.cleanup_failed', "error", error=str(e))
             return 0
 
 class ProUIFeaturesManager:
-    def __init__(self, translator=None):
-        self.translator = translator
+    def __init__(self):
+        self.ui_manager = UIManager()
 
         # Use centralized configuration (Windows-only)
         self.sqlite_path = config.cursor_paths['sqlite_path']
         self.storage_path = config.reset_machine_id_paths['storage_config_path']
 
         # Initialize backup manager
-        self.backup_manager = ProUIFeaturesBackupManager(translator)
+        self.backup_manager = ProUIFeaturesBackupManager()
 
     def update_pro_tier_database(self, silent=False) -> bool:
         """Update SQLite database with Pro tier and usage reset"""
         try:
             if not silent:
-                print(f"{Fore.CYAN}ℹ {self.translator.get('pro.updating_database') if self.translator else 'Updating Pro tier in database'}...{Style.RESET_ALL}")
+                self.ui_manager.display_text('pro.updating_database', "step")
 
             if not os.path.exists(self.sqlite_path):
                 if not silent:
-                    print(f"{Fore.RED}✗ {self.translator.get('pro.sqlite_not_found') if self.translator else 'SQLite database not found'}{Style.RESET_ALL}")
+                    self.ui_manager.display_text('pro.sqlite_not_found', "error")
                 return False
 
             # Create backup
@@ -466,23 +466,23 @@ class ProUIFeaturesManager:
             conn.close()
 
             if not silent:
-                self.ui_manager.display_localized_success('pro.database_updated', self.translator)
+                self.ui_manager.display_text('pro.database_updated', "success")
             return True
 
         except Exception as e:
             if not silent:
-                self.ui_manager.display_localized_error('pro.database_error', self.translator, error=str(e))
+                self.ui_manager.display_text('pro.database_error', "error", error=str(e))
             return False
 
     def update_storage_config(self, silent=False) -> bool:
         """Update storage.json configuration with Pro settings"""
         try:
             if not silent:
-                print(f"{Fore.CYAN}ℹ {self.translator.get('pro.updating_storage') if self.translator else 'Updating storage configuration'}...{Style.RESET_ALL}")
+                self.ui_manager.display_text('pro.updating_storage', "step")
 
             if not os.path.exists(self.storage_path):
                 if not silent:
-                    print(f"{Fore.YELLOW}⚠ {self.translator.get('pro.storage_not_found') if self.translator else 'Storage config not found, skipping storage updates'}{Style.RESET_ALL}")
+                    self.ui_manager.display_text('pro.storage_not_found', "warning")
                 return True
 
             # Create backup
