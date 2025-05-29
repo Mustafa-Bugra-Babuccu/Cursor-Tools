@@ -43,16 +43,22 @@ class CursorToolsBuilder:
             "disable_update.py",
             "reset_machine_id_manager.py",
             "reset_machine_id.py",
+            "pro_features_manager.py",
+            "pro_features.py",
             "auto_update_manager.py",
             "auto_update_config.py",
-            "requirements.txt"
+            "requirements.txt",
+            "CHANGELOG.md",
+            "LICENSE",
+            "README.md"
         ]
 
         # Dependencies from requirements.txt
         self.dependencies = [
             "rich==13.7.0",
             "colorama==0.4.6",
-            "requests==2.31.0"
+            "requests==2.31.0",
+            "urllib3>=1.26.0"
         ]
 
     def print_header(self):
@@ -140,6 +146,9 @@ a = Analysis(
     datas=[
         ('config.py', '.'),
         ('requirements.txt', '.'),
+        ('CHANGELOG.md', '.'),
+        ('LICENSE', '.'),
+        ('README.md', '.'),
     ],
     hiddenimports=[
         'rich.console',
@@ -149,10 +158,22 @@ a = Analysis(
         'rich.prompt',
         'rich.align',
         'rich.progress',
+        'rich.spinner',
+        'rich.columns',
+        'rich.status',
         'colorama',
         'requests',
+        'requests.adapters',
+        'requests.auth',
+        'requests.cookies',
+        'requests.exceptions',
+        'urllib3',
+        'urllib3.exceptions',
+        'ssl',
         'winreg',
         'ctypes',
+        'ctypes.wintypes',
+        'msvcrt',
         'sqlite3',
         'configparser',
         'uuid',
@@ -166,7 +187,9 @@ a = Analysis(
         'typing',
         'subprocess',
         'shutil',
-        'time'
+        'time',
+        'os',
+        'sys'
     ],
     hookspath=[],
     hooksconfig={{}},
