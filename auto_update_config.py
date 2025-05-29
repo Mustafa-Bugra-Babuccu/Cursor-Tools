@@ -7,7 +7,7 @@ class AutoUpdateConfig:
     """Configuration class for auto-update system"""
 
     # Application version (this should match the current version)
-    CURRENT_VERSION = "1.1.0"
+    CURRENT_VERSION = "1.0.0"
 
     # GitHub repository information
     GITHUB_OWNER = "Mustafa-Bugra-Babuccu"

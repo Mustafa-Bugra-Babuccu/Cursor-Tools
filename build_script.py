@@ -10,14 +10,17 @@ import subprocess
 import time
 from pathlib import Path
 from datetime import datetime
+from version_manager import CursorToolsVersionManager
 
 class CursorToolsBuilder:
-    def __init__(self):
+    def __init__(self, target_version=None):
         self.script_dir = Path(__file__).parent.absolute()
         self.build_dir = self.script_dir / "build"
         self.dist_dir = self.script_dir / "dist"
         self.app_name = "Cursor-Tools"
         self.main_script = "main.py"
+        self.version_manager = CursorToolsVersionManager()
+        self.target_version = target_version
 
         # Build configuration
         self.build_config = {
@@ -79,9 +82,13 @@ class CursorToolsBuilder:
 
     def print_header(self):
         """Print build script header"""
+        current_version = self.version_manager.get_current_version()
+        target_version = self.target_version or current_version
+
         print("=" * 60)
         print(f"🔨 Cursor-Tools Build Script")
         print(f"📅 Build Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"📦 Target Version: {target_version}")
         print("=" * 60)
 
     def check_requirements(self):
@@ -465,12 +472,22 @@ exe = EXE(
         print("   • Antivirus software may flag the executable (false positive)")
         print("   • The application modifies Windows registry and system files")
 
+    def prepare_version(self):
+        """Prepare version for build"""
+        if self.target_version:
+            print(f"\n🔧 Preparing version {self.target_version} for build...")
+            self.version_manager.prepare_for_build(self.target_version, 'release')
+        else:
+            current_version = self.version_manager.get_current_version()
+            print(f"\n📋 Using current version: {current_version}")
+
     def build_all(self):
         """Build all configurations"""
         builds = {}
 
         try:
             self.print_header()
+            self.prepare_version()
             self.check_requirements()
             self.install_dependencies()
             self.clean_build_dirs()
@@ -501,21 +518,37 @@ exe = EXE(
 
 def main():
     """Main build function"""
-    if len(sys.argv) > 1:
-        build_type = sys.argv[1].lower()
-        builder = CursorToolsBuilder()
+    target_version = None
+    build_type = "both"
 
-        if build_type == "onefile":
-            builder.build_config["one_folder"] = False
-        elif build_type == "onefolder":
-            builder.build_config["one_file"] = False
-        elif build_type == "both":
-            pass  # Build both (default)
+    # Parse command line arguments
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i].lower()
+
+        if arg in ["onefile", "onefolder", "both"]:
+            build_type = arg
+        elif arg == "--version" and i + 1 < len(sys.argv):
+            target_version = sys.argv[i + 1]
+            i += 1  # Skip the version value
+        elif arg.startswith("--version="):
+            target_version = arg.split("=", 1)[1]
         else:
-            print("Usage: python build_script.py [onefile|onefolder|both]")
+            print("Usage: python build_script.py [onefile|onefolder|both] [--version=X.Y.Z]")
+            print("Examples:")
+            print("  python build_script.py onefile --version=1.0.0")
+            print("  python build_script.py both --version=1.1.0")
             sys.exit(1)
-    else:
-        builder = CursorToolsBuilder()
+        i += 1
+
+    builder = CursorToolsBuilder(target_version)
+
+    if build_type == "onefile":
+        builder.build_config["one_folder"] = False
+    elif build_type == "onefolder":
+        builder.build_config["one_file"] = False
+    elif build_type == "both":
+        pass  # Build both (default)
 
     # Run the build
     builds = builder.build_all()

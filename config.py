@@ -217,16 +217,14 @@ class CursorToolsConfig:
             'confirm_before_restore': 'true'
         }
 
+        # AutoUpdate - Only non-critical settings in INI file
+        # Critical settings (version, github info) are hardcoded for security
         self.config['AutoUpdate'] = {
             'check_on_startup': 'true',
-            'force_update_policy': 'true',
             'update_check_timeout': '10',
             'download_timeout': '300',
             'backup_retention_days': '30',
             'temp_cleanup_days': '7',
-            'current_version': '1.1.0',
-            'github_owner': 'Mustafa-Bugra-Babuccu',
-            'github_repo': 'Cursor-Tools',
             'verify_ssl': 'true',
             'allow_redirects': 'true',
             'max_redirects': '5',
@@ -348,13 +346,26 @@ class ConfigManager:
         """Get auto-update configuration as a dictionary"""
         auto_update_section = self.config.config['AutoUpdate']
 
+        # SECURITY: Critical settings are hardcoded and cannot be modified via INI file
+        # This prevents users from redirecting updates to malicious servers
+
+        # Get version from version.json (build-time) or auto_update_config.py (hardcoded)
+        current_version = self._get_secure_version()
+
+        # Hardcoded GitHub repository info for security
+        github_owner = 'Mustafa-Bugra-Babuccu'
+        github_repo = 'Cursor-Tools'
+
         return {
-            'CURRENT_VERSION': auto_update_section.get('current_version', '1.1.0'),
-            'GITHUB_OWNER': auto_update_section.get('github_owner', 'Mustafa-Bugra-Babuccu'),
-            'GITHUB_REPO': auto_update_section.get('github_repo', 'Cursor-Tools'),
-            'GITHUB_API_URL': f"https://api.github.com/repos/{auto_update_section.get('github_owner', 'Mustafa-Bugra-Babuccu')}/{auto_update_section.get('github_repo', 'Cursor-Tools')}/releases/latest",
-            'GITHUB_REPO_URL': f"https://github.com/{auto_update_section.get('github_owner', 'Mustafa-Bugra-Babuccu')}/{auto_update_section.get('github_repo', 'Cursor-Tools')}",
-            'FORCE_UPDATE_POLICY': auto_update_section.getboolean('force_update_policy', True),
+            # SECURE: These cannot be modified by users
+            'CURRENT_VERSION': current_version,
+            'GITHUB_OWNER': github_owner,
+            'GITHUB_REPO': github_repo,
+            'GITHUB_API_URL': f"https://api.github.com/repos/{github_owner}/{github_repo}/releases/latest",
+            'GITHUB_REPO_URL': f"https://github.com/{github_owner}/{github_repo}",
+            'FORCE_UPDATE_POLICY': True,  # Always enforced for security
+
+            # CONFIGURABLE: These can be modified via INI file
             'CHECK_ON_STARTUP': auto_update_section.getboolean('check_on_startup', True),
             'UPDATE_CHECK_TIMEOUT': auto_update_section.getint('update_check_timeout', 10),
             'DOWNLOAD_TIMEOUT': auto_update_section.getint('download_timeout', 300),
@@ -369,6 +380,30 @@ class ConfigManager:
             'RETRY_DELAY': auto_update_section.getint('retry_delay', 2),
             'BATCH_SCRIPT_DELAY': auto_update_section.getint('batch_script_delay', 3)
         }
+
+    def _get_secure_version(self) -> str:
+        """Get version from secure sources (version.json or hardcoded config)"""
+        import json
+
+        # Priority 1: version.json (created during build)
+        version_file = "version.json"
+        if os.path.exists(version_file):
+            try:
+                with open(version_file, 'r') as f:
+                    version_data = json.load(f)
+                    return version_data.get('version', '0.0.1')
+            except Exception:
+                pass
+
+        # Priority 2: auto_update_config.py (hardcoded)
+        try:
+            from auto_update_config import AutoUpdateConfig
+            return AutoUpdateConfig.CURRENT_VERSION
+        except Exception:
+            pass
+
+        # Fallback
+        return '1.0.0'
 
     def get_api_headers(self) -> dict:
         """Get headers for GitHub API requests"""
