@@ -5,85 +5,6 @@ All notable changes to Cursor-Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2025-05-29
-
-### Added
-- **Token Reset Functionality** - Integrated token limit reset from reset.js into Python codebase
-  - New `reset_token_limits()` function in `reset_machine_id.py`
-  - Automatic token usage reset: `{"global":{"usage":{"sessionCount":0,"tokenCount":0}}}`
-  - Integrated into Pro UI Features application process as Step 2
-  - Automatic backup creation before token reset operations
-  - Centralized configuration path usage for SQLite database access
-
-- **Enhanced Device ID Modifier Backup UI** - Improved backup restoration interface
-  - Rich table formatting with rounded borders matching Pro UI Features style
-  - Detailed backup information display (No., Backup Name, Date, Files, Description)
-  - Enhanced backup metadata including file count and formatted timestamps
-  - Improved user selection interface with 'c' to cancel option
-  - Better error handling and user feedback during restoration process
-
-### Changed
-- **Simplified Pro UI Features Output** - Streamlined user experience with clean completion messages
-  - Replaced verbose step-by-step output with simple completion messages
-  - Added silent mode operation for all Pro UI Features functions
-  - Created dual-mode system: `apply_pro_features(silent=True)` and `apply_pro_features_verbose()`
-  - Simplified completion messages: "✓ Pro UI features applied successfully" or "✓ Operation completed successfully"
-  - Hidden all intermediate progress indicators (ℹ, 💾, ✓, ✗ symbols with descriptions)
-  - Removed detailed error messages about missing workbench files from user interface
-  - Maintained full functionality while hiding verbose logging from users
-
-- **Enhanced Pro UI Features Integration** - Token reset now part of Pro features application
-  - Token reset integrated as Step 2 in Pro UI Features application process
-  - Renumbered subsequent steps: storage config → Step 3, workbench → Step 4, UI modifications → Step 5
-  - Improved error handling with graceful continuation even if token reset fails
-  - Consistent backup creation across all Pro UI Features operations
-
-- **Improved Backup Management** - Enhanced backup functionality across modules
-  - Added silent mode support to backup creation functions
-  - Enhanced backup metadata with detailed file counts and descriptions
-  - Improved backup restoration UI consistency across all modules
-  - Better error handling during backup operations
-
-### Enhanced
-- **User Interface Improvements** - Consistent styling and better user experience
-  - Standardized Rich console table formatting across all backup restoration interfaces
-  - Consistent column structure (No., Backup Name, Date, Files, Description) across modules
-  - Improved visual styling with rounded borders and proper spacing
-  - Enhanced user interaction patterns with consistent selection methods
-
-- **Error Handling and Resilience** - Improved application stability
-  - Better exception handling in token reset functionality
-  - Graceful failure recovery in Pro UI Features application
-  - Improved error messages and user feedback
-  - Enhanced validation and safety checks
-
-### Technical Improvements
-- **Code Organization** - Better separation of concerns and modularity
-  - Separated verbose and silent operation modes in Pro UI Features
-  - Enhanced function signatures with optional `silent` parameters
-  - Improved configuration management for token reset functionality
-  - Better integration between modules while maintaining independence
-
-- **Configuration Management** - Enhanced centralized configuration
-  - Improved path management for SQLite database access
-  - Better backup directory organization and management
-  - Enhanced configuration consistency across all modules
-
-### Fixed
-- **Import and Dependency Issues** - Resolved module import problems
-  - Fixed import statements for token reset functionality
-  - Improved module dependency management
-  - Better error handling for missing dependencies
-
-### Documentation
-- **Updated Documentation** - Comprehensive documentation updates
-  - Updated README.md to reflect all new features and improvements
-  - Enhanced feature descriptions with new capabilities
-  - Updated project structure documentation
-  - Improved usage instructions and menu descriptions
-
----
-
 ## [1.0.0] - 2025-05-29
 
 ### Added
@@ -104,7 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restore functionality from previous backups
   - View current registry values in structured format
   - Safe registry manipulation with administrator privilege checks
-  - Backup selection menu with date/time information
+  - Enhanced backup restoration interface with Rich table formatting
+  - Detailed backup information display (No., Backup Name, Date, Files, Description)
+  - Enhanced backup metadata including file count and formatted timestamps
+  - Improved user selection interface with 'c' to cancel option
+  - Better error handling and user feedback during restoration process
 
 - **Auto-Update Disabler Module**
   - Disable Cursor's automatic update functionality
@@ -121,7 +46,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Patch main.js file for getMachineId functions
   - Create comprehensive backups before operations
   - Custom UI modifications and branding changes
-  - Token limit modifications for enhanced functionality
+  - **Token Reset Functionality** - Integrated token limit reset from reset.js into Python codebase
+  - New `reset_token_limits()` function in `reset_machine_id.py`
+  - Automatic token usage reset: `{"global":{"usage":{"sessionCount":0,"tokenCount":0}}}`
+  - Automatic backup creation before token reset operations
+  - Centralized configuration path usage for SQLite database access
+
+- **Pro UI Features Module**
+  - Complete Pro UI feature application with simplified user experience
+  - **Simplified Output** - Streamlined user experience with clean completion messages
+  - Replaced verbose step-by-step output with simple completion messages
+  - Added silent mode operation for all Pro UI Features functions
+  - Created dual-mode system: `apply_pro_features(silent=True)` and `apply_pro_features_verbose()`
+  - Simplified completion messages: "✓ Pro UI features applied successfully" or "✓ Operation completed successfully"
+  - Hidden all intermediate progress indicators (ℹ, 💾, ✓, ✗ symbols with descriptions)
+  - Removed detailed error messages about missing workbench files from user interface
+  - **Token Reset Integration** - Token reset integrated as Step 2 in Pro UI Features application process
+  - Renumbered subsequent steps: storage config → Step 3, workbench → Step 4, UI modifications → Step 5
+  - Improved error handling with graceful continuation even if token reset fails
+  - Consistent backup creation across all Pro UI Features operations
+  - Enhanced backup functionality with silent mode support
+  - Rich table formatting for backup restoration matching Device ID Modifier style
 
 - **Auto-Update System** - Complete automatic update functionality
   - Automatic update checking at application startup
@@ -133,7 +78,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Progress indication during download and installation
   - Automatic cleanup of old temporary and backup files
   - Batch script-based update installation for seamless replacement
-  - Error handling for network issues and download failures
+  - **Enhanced SSL Support** - Robust network connectivity for corporate environments
+  - SSL fallback mechanism for environments with certificate issues
+  - Automatic retry with SSL verification disabled when needed
+  - Enhanced error handling for SSL certificate verification failures
+  - Configurable SSL verification settings for different network environments
+  - Better error messages and user feedback for network issues
+  - Manual GitHub releases URL provided when auto-update fails
+  - Corporate-friendly operation in restrictive network configurations
   - Integration with existing Rich CLI interface
 
 - **Rich User Interface**
@@ -144,6 +96,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Structured data display in tables
   - Progress feedback and error handling
   - Administrator privilege warnings
+  - **Enhanced UI Consistency** - Standardized styling across all modules
+  - Standardized Rich console table formatting across all backup restoration interfaces
+  - Consistent column structure (No., Backup Name, Date, Files, Description) across modules
+  - Improved visual styling with rounded borders and proper spacing
+  - Enhanced user interaction patterns with consistent selection methods
+  - Better error handling and user feedback throughout the application
 
 - **Configuration Management**
   - Centralized configuration system
@@ -152,6 +110,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - INI-based configuration file
   - Customizable settings for all modules
   - Backup retention and cleanup options
+  - **Enhanced Configuration** - Improved centralized configuration management
+  - Improved path management for SQLite database access
+  - Better backup directory organization and management
+  - Enhanced configuration consistency across all modules
+  - Configurable SSL verification settings for network environments
 
 - **Build System**
   - Comprehensive build configuration (build_config.ini)
@@ -169,6 +132,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Error handling and rollback capabilities
   - User confirmation for critical operations
   - Safe file manipulation with proper error handling
+
+### Enhanced
+- **Error Handling and Resilience** - Improved application stability
+  - Better exception handling in token reset functionality
+  - Graceful failure recovery in Pro UI Features application
+  - Improved error messages and user feedback
+  - Enhanced validation and safety checks
+  - Better error handling during backup operations
+
+- **Code Organization** - Better separation of concerns and modularity
+  - Separated verbose and silent operation modes in Pro UI Features
+  - Enhanced function signatures with optional `silent` parameters
+  - Improved configuration management for token reset functionality
+  - Better integration between modules while maintaining independence
+  - Improved module dependency management
+
+### Fixed
+- **Import and Dependency Issues** - Resolved module import problems
+  - Fixed import statements for token reset functionality
+  - Improved module dependency management
+  - Better error handling for missing dependencies
 
 ### Technical Details
 - **Platform**: Windows 10/11 (64-bit) only
@@ -188,6 +172,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backup Strategy: Automatic backup creation before updates
   - Installation Method: Batch script for safe executable replacement
   - Cleanup: Automatic removal of files older than 7 days (temp) and 30 days (backups)
+  - SSL Support: Configurable SSL verification with automatic fallback for corporate environments
+  - Network Resilience: Enhanced error handling for SSL certificate issues and network problems
 
 ### Documentation
 - Comprehensive README.md with installation and usage instructions
@@ -195,6 +181,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Detailed code documentation and docstrings
 - Build instructions and configuration guide
 - Security warnings and legal notices
+- **Enhanced Documentation** - Comprehensive documentation updates
+- Updated README.md to reflect all new features and improvements
+- Enhanced feature descriptions with new capabilities
+- Updated project structure documentation
+- Improved usage instructions and menu descriptions
+- Auto-update troubleshooting guide for SSL issues
+- Corporate environment configuration instructions
 
 ### Known Limitations
 - Windows-only compatibility (by design)

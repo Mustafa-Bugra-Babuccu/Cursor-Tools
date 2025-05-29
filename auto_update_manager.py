@@ -73,14 +73,11 @@ class AutoUpdateManager:
         try:
             self.ui_manager.display_info("Checking for updates...")
 
-            # Make request to GitHub API
-            headers = auto_update_config.get_api_headers()
+            # Get request configuration
+            request_config = auto_update_config.get_request_config()
 
-            response = requests.get(
-                self.github_api_url,
-                headers=headers,
-                timeout=self.update_check_timeout
-            )
+            # Make request to GitHub API
+            response = requests.get(self.github_api_url, **request_config)
 
             if response.status_code == 200:
                 release_data = response.json()
@@ -109,11 +106,71 @@ class AutoUpdateManager:
         except requests.exceptions.Timeout:
             self.ui_manager.display_error("Update check timed out. Please check your internet connection.")
             return None
-        except requests.exceptions.ConnectionError:
-            self.ui_manager.display_error("Unable to connect to GitHub. Please check your internet connection.")
-            return None
+        except requests.exceptions.SSLError as e:
+            self.ui_manager.display_warning("SSL certificate verification failed. Trying with SSL disabled...")
+            return self._check_for_updates_fallback()
+        except requests.exceptions.ConnectionError as e:
+            error_msg = str(e).lower()
+            if "ssl" in error_msg or "certificate" in error_msg:
+                self.ui_manager.display_warning("SSL certificate verification failed. Trying with SSL disabled...")
+                return self._check_for_updates_fallback()
+            else:
+                self.ui_manager.display_error("Unable to connect to GitHub. Please check your internet connection.")
+                return None
         except Exception as e:
-            self.ui_manager.display_error(f"Error checking for updates: {str(e)}")
+            error_msg = str(e).lower()
+            if "ssl" in error_msg or "certificate" in error_msg:
+                self.ui_manager.display_error("SSL certificate verification failed.")
+                self.ui_manager.display_warning("This may be due to corporate firewall or network configuration.")
+                self.ui_manager.display_info("You can manually check for updates at: " + auto_update_config.GITHUB_REPO_URL + "/releases")
+            else:
+                self.ui_manager.display_error(f"Error checking for updates: {str(e)}")
+            return None
+
+    def _check_for_updates_fallback(self) -> Optional[Dict]:
+        """
+        Fallback update check with SSL verification disabled
+
+        Returns:
+            Dict with update information if available, None otherwise
+        """
+        try:
+            self.ui_manager.display_info("Retrying update check with SSL verification disabled...")
+
+            # Get fallback request configuration (SSL disabled)
+            request_config = auto_update_config.get_fallback_request_config()
+
+            # Make request to GitHub API
+            response = requests.get(self.github_api_url, **request_config)
+
+            if response.status_code == 200:
+                release_data = response.json()
+                latest_version = release_data.get("tag_name", "").lstrip("v")
+
+                if self._is_newer_version(latest_version, self.current_version):
+                    self.ui_manager.display_success("Update check successful (SSL verification disabled)")
+                    return {
+                        "version": latest_version,
+                        "name": release_data.get("name", f"Version {latest_version}"),
+                        "body": release_data.get("body", "No release notes available."),
+                        "published_at": release_data.get("published_at", ""),
+                        "assets": release_data.get("assets", []),
+                        "download_url": self._get_download_url(release_data.get("assets", []))
+                    }
+                else:
+                    self.ui_manager.display_success("You are running the latest version!")
+                    return None
+
+            elif response.status_code == 403:
+                self.ui_manager.display_warning("GitHub API rate limit exceeded. Please try again later.")
+                return None
+            else:
+                self.ui_manager.display_error(f"Failed to check for updates. HTTP {response.status_code}")
+                return None
+
+        except Exception as e:
+            self.ui_manager.display_error("Update check failed even with SSL disabled.")
+            self.ui_manager.display_info("You can manually check for updates at: " + auto_update_config.GITHUB_REPO_URL + "/releases")
             return None
 
     def _is_newer_version(self, latest: str, current: str) -> bool:
@@ -224,7 +281,13 @@ class AutoUpdateManager:
             download_path = os.path.join(self.temp_dir, filename)
 
             # Start download with progress bar
-            response = requests.get(download_url, stream=True, timeout=self.download_timeout)
+            response = requests.get(
+                download_url,
+                stream=True,
+                timeout=self.download_timeout,
+                verify=auto_update_config.VERIFY_SSL,
+                allow_redirects=auto_update_config.ALLOW_REDIRECTS
+            )
             response.raise_for_status()
 
             total_size = int(response.headers.get('content-length', 0))
@@ -251,8 +314,17 @@ class AutoUpdateManager:
         except requests.exceptions.Timeout:
             self.ui_manager.display_error("Download timed out. Please try again.")
             return None
+        except requests.exceptions.SSLError:
+            self.ui_manager.display_error("SSL certificate verification failed during download.")
+            self.ui_manager.display_warning("This may be due to corporate firewall or network configuration.")
+            return None
         except requests.exceptions.RequestException as e:
-            self.ui_manager.display_error(f"Download failed: {str(e)}")
+            error_msg = str(e).lower()
+            if "ssl" in error_msg or "certificate" in error_msg:
+                self.ui_manager.display_error("SSL certificate verification failed during download.")
+                self.ui_manager.display_warning("This may be due to corporate firewall or network configuration.")
+            else:
+                self.ui_manager.display_error(f"Download failed: {str(e)}")
             return None
         except Exception as e:
             self.ui_manager.display_error(f"Unexpected error during download: {str(e)}")

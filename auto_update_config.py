@@ -23,6 +23,11 @@ class AutoUpdateConfig:
     UPDATE_CHECK_TIMEOUT = 10   # Timeout for GitHub API requests
     DOWNLOAD_TIMEOUT = 300      # Timeout for downloading updates (5 minutes)
 
+    # SSL and network settings
+    VERIFY_SSL = True           # Set to False to disable SSL verification (not recommended)
+    ALLOW_REDIRECTS = True      # Allow HTTP redirects
+    MAX_REDIRECTS = 5           # Maximum number of redirects to follow
+
     # File management settings
     BACKUP_RETENTION_DAYS = 30  # Keep backups for 30 days
     TEMP_CLEANUP_DAYS = 7       # Clean temp files after 7 days
@@ -56,6 +61,16 @@ class AutoUpdateConfig:
         return {
             "Accept": "application/vnd.github.v3+json",
             "User-Agent": cls.USER_AGENT
+        }
+
+    @classmethod
+    def get_request_config(cls):
+        """Get configuration for requests"""
+        return {
+            "timeout": cls.UPDATE_CHECK_TIMEOUT,
+            "verify": cls.VERIFY_SSL,
+            "allow_redirects": cls.ALLOW_REDIRECTS,
+            "headers": cls.get_api_headers()
         }
 
     @classmethod
@@ -93,6 +108,19 @@ class AutoUpdateConfig:
         import re
         pattern = r'^\d+\.\d+\.\d+$'
         return bool(re.match(pattern, version))
+
+    @classmethod
+    def get_fallback_request_config(cls):
+        """Get fallback configuration for requests with SSL disabled"""
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        return {
+            "timeout": cls.UPDATE_CHECK_TIMEOUT,
+            "verify": False,  # Disable SSL verification
+            "allow_redirects": cls.ALLOW_REDIRECTS,
+            "headers": cls.get_api_headers()
+        }
 
 # Global configuration instance
 auto_update_config = AutoUpdateConfig()
