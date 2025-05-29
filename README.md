@@ -4,64 +4,33 @@
 
 ![Python](https://img.shields.io/badge/python-v3.7+-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![License](https://imgshields.io/badge/license-MIT-green.svg)
 ![Version](https://img.shields.io/badge/version-1.1.0-orange.svg)
 
 ## 🚀 Features
 
 ### 📊 Account Information
-- View comprehensive Cursor account details
-- Display subscription type and status
-- Show usage statistics for Fast Response and Slow Response
-- Monitor trial days remaining
-- Track API usage limits
+- View Cursor account details, subscription status, and usage statistics.
 
 ### 🔧 Device ID Modifier
-- Modify Windows device IDs and registry entries
-- Automatic backup creation before modifications
-- **Enhanced Backup UI**: Rich table interface for backup restoration with detailed information
-- Restore from previous backups with improved selection interface
-- View current registry values
-- Safe registry manipulation with administrator privileges
+- Modify Windows device IDs and registry entries.
+- Automatic backup and restore functionality with an enhanced UI.
 
 ### 🚫 Auto-Update Disabler
-- Disable Cursor's automatic update functionality
-- Prevent unwanted updates and version changes
-- Maintain control over your Cursor installation
+- Disable Cursor's automatic update functionality.
 
 ### 🔄 Machine ID Reset
-- Reset Cursor's machine identification
-- Modify system registry entries
-- Patch application files for enhanced functionality
-- **Token Reset Integration**: Automatic token limit reset functionality
-- Create backups before making changes
-- Restore previous configurations
+- Reset Cursor's machine identification and related files, including token limits.
 
-### 🚀 Pro UI Features (Enhanced)
-- **Simplified User Experience**: Streamlined output with clean completion messages
-- **Token Reset Integration**: Automatic token limit reset as part of Pro features application
-- **Silent Operation Mode**: All operations run quietly with only final status messages
-- **Comprehensive Backup**: Automatic backup creation before applying any changes
-- **Enhanced Error Handling**: Robust error handling with graceful failure recovery
-- **UI Modifications**: Apply workbench and comprehensive UI customizations
-- **Database Updates**: Pro tier activation and usage data reset
+### 🚀 Pro UI Features
+- Apply Pro-related UI modifications and settings with a simplified process and automatic backup.
 
 ### 🚀 Auto-Update System
-- Automatic update checking at startup
-- Download and install updates from GitHub releases
-- Forced update policy - requires latest version to continue
-- Safe update process with backup creation
-- Automatic cleanup of old files and backups
-- Progress indication during download and installation
+- Automatic update checking, downloading, and installation from GitHub releases with a forced update policy and enhanced network compatibility.
 
 ## 🎨 User Interface
 
-Cursor-Tools features a beautiful, rich command-line interface with:
-- Colorful menus and panels
-- Clear status indicators
-- Interactive prompts and confirmations
-- Structured data display
-- Error handling and user feedback
+Cursor-Tools features a colorful and interactive command-line interface using the Rich library.
 
 ## 📋 Requirements
 
@@ -71,174 +40,109 @@ Cursor-Tools features a beautiful, rich command-line interface with:
 - **Privileges**: Administrator rights required
 
 ### Dependencies
-- `rich==13.7.0` - Rich text and beautiful formatting
-- `colorama==0.4.6` - Cross-platform colored terminal text
-- `requests==2.31.0` - HTTP library for API calls
+- `rich`
+- `colorama`
+- `requests`
 
 ## 🛠️ Installation
 
 ### Option 1: From Source
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools.git
-   cd Cursor-Tools
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Run the application:
-   ```bash
-   python main.py
-   ```
+1. Clone the repository.
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the application: `python main.py`
 
 ### Option 2: Pre-built Executable
-1. Download the latest release from the [Releases](https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools/releases) page
-2. Extract the archive
-3. Run `Cursor-Tools.exe` as Administrator
+1. Download the latest release from the [Releases](https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools/releases) page.
+2. Extract the archive and run `Cursor-Tools.exe` as Administrator.
 
 ## 🚀 Usage
 
 ### Running the Application
-1. **Right-click** on `main.py` or `Cursor-Tools.exe`
-2. Select **"Run as administrator"**
-3. Follow the interactive menu system
+- Right-click `main.py` or `Cursor-Tools.exe` and select **"Run as administrator"**.
+- Follow the interactive menu.
 
 ### Main Menu Options
 ```
-1. Account Info          - View Cursor account information
-2. Device ID Modifier    - Modify Windows device identifiers (enhanced backup UI)
-3. Disable Auto Update   - Prevent automatic Cursor updates
-4. Reset Machine ID      - Reset Cursor's machine identification (with token reset)
-5. Pro UI Features       - Apply Pro-related UI modifications and settings
-   • Apply All Pro UI Features   - Complete Pro UI feature application (simplified output)
-   • UI Modifications Only       - UI changes without database updates (simplified output)
-   • Database Updates Only       - Database changes without UI modifications
-   • Restore Pro UI Features Backup - Restore from automatic backup (enhanced table UI)
-6. Exit Application      - Close the application
+1. Account Info
+2. Device ID Modifier
+3. Disable Auto Update
+4. Reset Machine ID
+5. Pro UI Features
+6. Exit Application
 ```
 
 ### Important Notes
-- **Administrator privileges are required** for registry modifications
-- **Backups are automatically created** before making changes
-- **Always review changes** before confirming operations
-- **Close Cursor** before running certain operations
+- **Administrator privileges are required.**
+- **Backups are automatically created.**
+- **Always review changes** before confirming.
+- **Close Cursor** before running certain operations.
 
 ## 🔧 Building from Source
 
 ### Prerequisites
 - Python 3.7+
 - PyInstaller
-- All dependencies from `requirements.txt`
+- Dependencies from `requirements.txt`
 
 ### Build Process
-1. Install build dependencies:
-   ```bash
-   pip install pyinstaller
-   pip install -r requirements.txt
-   ```
-
-2. Run the build script:
-   ```bash
-   python build_script.py
-   ```
-   Or use the batch file:
-   ```bash
-   build.bat
-   ```
-
-3. Find the executable in the `dist` folder
+1. Install build dependencies: `pip install pyinstaller`
+2. Run the build script: `python build_script.py` or `build.bat`
+3. Find the executable in the `dist` folder.
 
 ### Build Configuration
-The build process is configured via `build_config.ini` with options for:
-- One-file vs one-folder distribution
-- Optimization settings
-- Dependency inclusion/exclusion
-- Advanced PyInstaller options
+Configured via `build_config.ini`.
 
 ## 📁 Project Structure
 
 ```
 Cursor-Tools/
-├── main.py                     # Main application entry point
-├── ui_manager.py              # User interface management
-├── account_info_manager.py    # Account information handling
-├── device_id_modifier.py      # Device ID modification logic (enhanced backup UI)
-├── disable_update_manager.py  # Update disabling functionality
-├── reset_machine_id_manager.py # Machine ID reset operations
-├── reset_machine_id.py        # Machine ID reset logic (with token reset)
-├── pro_features_manager.py    # Pro UI Features management (simplified output)
-├── pro_features.py           # Pro UI Features logic (token reset integration)
+├── main.py                     # Main entry point
+├── ui_manager.py              # User interface
+├── account_info_manager.py    # Account info
+├── device_id_modifier.py      # Device ID modification
+├── disable_update_manager.py  # Update disabling
+├── reset_machine_id_manager.py # Machine ID reset management
+├── reset_machine_id.py        # Machine ID reset logic
+├── pro_features_manager.py    # Pro UI Features management
+├── pro_features.py           # Pro UI Features logic
 ├── auto_update_manager.py     # Automatic update system
-├── registry_manager.py        # Windows registry operations (enhanced backup info)
-├── acc_info.py               # Cursor account info retrieval
-├── config.py                 # Configuration management
-├── requirements.txt          # Python dependencies
-├── build_config.ini         # Build configuration (v1.1.0)
-├── build_script.py          # Automated build script
-├── build.bat               # Windows build batch file
-├── README.md              # This file
-├── LICENSE               # MIT License
+├── registry_manager.py        # Registry operations
+├── acc_info.py               # Account info retrieval
+├── config.py                 # Configuration
+├── requirements.txt          # Dependencies
+├── build_config.ini         # Build configuration
+├── build_script.py          # Build script
+├── build.bat               # Build batch file
+├── README.md              # Project overview
+├── LICENSE               # License information
 └── CHANGELOG.md         # Version history
 ```
 
 ## ⚠️ Important Warnings
 
-### Security Considerations
-- This tool modifies Windows registry entries
-- Always run with administrator privileges
-- Backups are created automatically but verify them
-- Use at your own risk - no warranty provided
-
-### Compatibility
-- **Windows Only** - This tool is designed specifically for Windows
-- **Cursor Editor** - Requires Cursor AI editor to be installed
-- **Registry Access** - Needs permission to modify system registry
-
-### Legal Notice
-This tool is for educational and personal use only. Users are responsible for compliance with Cursor's Terms of Service and applicable laws.
+- **Security**: Modifies Windows registry. Use with administrator privileges. Backups are created, but verify. Use at your own risk.
+- **Compatibility**: Windows only. Requires Cursor AI editor.
+- **Legal**: For educational/personal use. Users are responsible for compliance.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Code Style
-- Follow PEP 8 guidelines
-- Use meaningful variable and function names
-- Add docstrings to functions and classes
-- Include error handling and logging
+Contributions are welcome. Please open an issue or submit a Pull Request.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file.
 
 ## 🙏 Acknowledgments
 
-- [Rich](https://github.com/Textualize/rich) - For beautiful terminal formatting
-- [Colorama](https://github.com/tartley/colorama) - For cross-platform colored output
-- [Requests](https://github.com/psf/requests) - For HTTP functionality
-- Cursor AI team - For creating an amazing code editor
+Thanks to the libraries used: Rich, Colorama, Requests, and the Cursor AI team.
 
 ## 📞 Support
 
-If you encounter any issues or have questions:
-1. Check the [Issues](https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools/issues) page
-2. Create a new issue with detailed information
-3. Include your Windows version and Python version
-4. Provide error messages and steps to reproduce
+Check the [Issues](https://github.com/Mustafa-Bugra-Babuccu/Cursor-Tools/issues) page or create a new issue.
 
 ## 🔄 Version History
 
-See [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
+See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

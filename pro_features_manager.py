@@ -21,7 +21,7 @@ class ProUIFeaturesMenuManager:
 
             choice = self.ui_manager.get_user_choice(
                 "Select an option",
-                valid_choices=["1", "2", "3", "4", "5"]
+                valid_choices=["1", "2", "3"]
             )
 
             if choice is None:  # User pressed Ctrl+C
@@ -29,15 +29,11 @@ class ProUIFeaturesMenuManager:
             elif choice == "1":
                 self.apply_all_pro_features()
             elif choice == "2":
-                self.apply_ui_modifications_only()
-            elif choice == "3":
-                self.apply_database_updates_only()
-            elif choice == "4":
                 self.restore_pro_ui_features_backup()
-            elif choice == "5":
+            elif choice == "3":
                 break
 
-            if choice in ["1", "2", "3", "4"]:
+            if choice in ["1", "2"]:
                 self.ui_manager.pause()
 
     def display_pro_ui_features_menu(self):
@@ -49,11 +45,9 @@ class ProUIFeaturesMenuManager:
         menu_table.add_column("Option", style="cyan", width=4)
         menu_table.add_column("Description", style="white")
 
-        menu_table.add_row("1.", "Apply All Pro UI Features")
-        menu_table.add_row("2.", "UI Modifications Only")
-        menu_table.add_row("3.", "Database Updates Only")
-        menu_table.add_row("4.", "Restore Backup")
-        menu_table.add_row("5.", "Return to Main Menu")
+        menu_table.add_row("1.", "Pro UI Features")
+        menu_table.add_row("2.", "Restore Backup")
+        menu_table.add_row("3.", "Return to Main Menu")
 
         menu_panel = Panel(
             menu_table,
@@ -87,78 +81,6 @@ class ProUIFeaturesMenuManager:
 
         except Exception as e:
             self.ui_manager.display_error(f"Failed to apply Pro UI features: {str(e)}")
-
-    def apply_ui_modifications_only(self):
-        """Apply only UI modifications without database changes"""
-        self.ui_manager.clear_screen()
-        self.ui_manager.display_header()
-
-        self.ui_manager.display_info("Applying UI modifications only...")
-        self.ui_manager.display_warning("This will modify Cursor UI files but not database settings.")
-
-        if not self.ui_manager.confirm_action("Do you want to continue with UI modifications only?"):
-            self.ui_manager.display_info("Operation cancelled by user.")
-            return
-
-        try:
-            from pro_features import get_workbench_cursor_path, modify_workbench_js, modify_ui_files
-
-            success = True
-
-            # Apply workbench modifications silently
-            try:
-                workbench_path = get_workbench_cursor_path()
-                if not modify_workbench_js(workbench_path, silent=True):
-                    success = False
-            except Exception:
-                success = False
-
-            # Apply UI file modifications silently
-            if not modify_ui_files(silent=True):
-                success = False
-
-            if success:
-                self.ui_manager.display_success("✓ UI modifications completed successfully")
-                self.ui_manager.display_info("Please restart Cursor to see the changes.")
-            else:
-                self.ui_manager.display_warning("✓ Operation completed successfully")
-
-        except Exception as e:
-            self.ui_manager.display_error(f"Failed to apply UI modifications: {str(e)}")
-
-    def apply_database_updates_only(self):
-        """Apply only database updates without UI changes"""
-        self.ui_manager.clear_screen()
-        self.ui_manager.display_header()
-
-        self.ui_manager.display_info("Applying database updates only...")
-        self.ui_manager.display_warning("This will update Pro tier and storage settings but not UI files.")
-
-        if not self.ui_manager.confirm_action("Do you want to continue with database updates only?"):
-            self.ui_manager.display_info("Operation cancelled by user.")
-            return
-
-        try:
-            success = True
-
-            # Update Pro tier in database
-            if not self.pro_features_manager.update_pro_tier_database():
-                success = False
-
-            # Update storage configuration
-            if not self.pro_features_manager.update_storage_config():
-                success = False
-
-            if success:
-                self.ui_manager.display_success("Database updates applied successfully!")
-                self.ui_manager.display_info("Please restart Cursor to see the changes.")
-            else:
-                self.ui_manager.display_warning("Database updates completed with some warnings.")
-
-        except Exception as e:
-            self.ui_manager.display_error(f"Failed to apply database updates: {str(e)}")
-
-
 
     def restore_pro_ui_features_backup(self):
         """Restore a Pro UI Features backup"""

@@ -140,6 +140,8 @@ class CursorToolsConfig:
         # If no valid path found, return the first path for error handling
         return possible_paths[0] if possible_paths else ""
 
+
+
     def _get_reset_machine_id_paths(self) -> Dict[str, str]:
         """Get reset machine ID paths for Windows with automatic path detection"""
         appdata = os.getenv("APPDATA", "")
@@ -221,7 +223,18 @@ class CursorToolsConfig:
             'update_check_timeout': '10',
             'download_timeout': '300',
             'backup_retention_days': '30',
-            'temp_cleanup_days': '7'
+            'temp_cleanup_days': '7',
+            'current_version': '1.1.0',
+            'github_owner': 'Mustafa-Bugra-Babuccu',
+            'github_repo': 'Cursor-Tools',
+            'verify_ssl': 'true',
+            'allow_redirects': 'true',
+            'max_redirects': '5',
+            'chunk_size': '8192',
+            'max_release_notes_length': '200',
+            'max_retry_attempts': '3',
+            'retry_delay': '2',
+            'batch_script_delay': '3'
         }
 
         self.config['Paths'] = {
@@ -325,5 +338,120 @@ class CursorToolsConfig:
 
         return info
 
-# Global configuration instance
+class ConfigManager:
+    """Centralized configuration management for all modules"""
+
+    def __init__(self):
+        self.config = CursorToolsConfig()
+
+    def get_auto_update_config(self) -> dict:
+        """Get auto-update configuration as a dictionary"""
+        auto_update_section = self.config.config['AutoUpdate']
+
+        return {
+            'CURRENT_VERSION': auto_update_section.get('current_version', '1.1.0'),
+            'GITHUB_OWNER': auto_update_section.get('github_owner', 'Mustafa-Bugra-Babuccu'),
+            'GITHUB_REPO': auto_update_section.get('github_repo', 'Cursor-Tools'),
+            'GITHUB_API_URL': f"https://api.github.com/repos/{auto_update_section.get('github_owner', 'Mustafa-Bugra-Babuccu')}/{auto_update_section.get('github_repo', 'Cursor-Tools')}/releases/latest",
+            'GITHUB_REPO_URL': f"https://github.com/{auto_update_section.get('github_owner', 'Mustafa-Bugra-Babuccu')}/{auto_update_section.get('github_repo', 'Cursor-Tools')}",
+            'FORCE_UPDATE_POLICY': auto_update_section.getboolean('force_update_policy', True),
+            'CHECK_ON_STARTUP': auto_update_section.getboolean('check_on_startup', True),
+            'UPDATE_CHECK_TIMEOUT': auto_update_section.getint('update_check_timeout', 10),
+            'DOWNLOAD_TIMEOUT': auto_update_section.getint('download_timeout', 300),
+            'VERIFY_SSL': auto_update_section.getboolean('verify_ssl', True),
+            'ALLOW_REDIRECTS': auto_update_section.getboolean('allow_redirects', True),
+            'MAX_REDIRECTS': auto_update_section.getint('max_redirects', 5),
+            'BACKUP_RETENTION_DAYS': auto_update_section.getint('backup_retention_days', 30),
+            'TEMP_CLEANUP_DAYS': auto_update_section.getint('temp_cleanup_days', 7),
+            'CHUNK_SIZE': auto_update_section.getint('chunk_size', 8192),
+            'MAX_RELEASE_NOTES_LENGTH': auto_update_section.getint('max_release_notes_length', 200),
+            'MAX_RETRY_ATTEMPTS': auto_update_section.getint('max_retry_attempts', 3),
+            'RETRY_DELAY': auto_update_section.getint('retry_delay', 2),
+            'BATCH_SCRIPT_DELAY': auto_update_section.getint('batch_script_delay', 3)
+        }
+
+    def get_api_headers(self) -> dict:
+        """Get headers for GitHub API requests"""
+        auto_config = self.get_auto_update_config()
+        return {
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": f"Cursor-Tools/{auto_config['CURRENT_VERSION']}"
+        }
+
+    def get_request_config(self) -> dict:
+        """Get configuration for requests"""
+        auto_config = self.get_auto_update_config()
+        return {
+            "timeout": auto_config['UPDATE_CHECK_TIMEOUT'],
+            "verify": auto_config['VERIFY_SSL'],
+            "allow_redirects": auto_config['ALLOW_REDIRECTS'],
+            "headers": self.get_api_headers()
+        }
+
+    def get_download_filename(self, version: str) -> str:
+        """Get the expected download filename for a version"""
+        return f"Cursor-Tools-v{version}.exe"
+
+    def validate_version_format(self, version: str) -> bool:
+        """Validate version string format (semantic versioning)"""
+        import re
+        pattern = r'^\d+\.\d+\.\d+$'
+        return bool(re.match(pattern, version))
+
+    def get_fallback_request_config(self) -> dict:
+        """Get fallback configuration for requests with SSL disabled"""
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        auto_config = self.get_auto_update_config()
+        return {
+            "timeout": auto_config['UPDATE_CHECK_TIMEOUT'],
+            "verify": False,  # Disable SSL verification
+            "allow_redirects": auto_config['ALLOW_REDIRECTS'],
+            "headers": self.get_api_headers()
+        }
+
+    def get_cursor_paths(self) -> dict:
+        """Get Cursor installation paths"""
+        return self.config.cursor_paths
+
+    def get_reset_machine_id_paths(self) -> dict:
+        """Get reset machine ID paths"""
+        return self.config.reset_machine_id_paths
+
+    def get_update_disabler_paths(self) -> dict:
+        """Get update disabler paths"""
+        return self.config.update_disabler_paths
+
+    def get_registry_paths(self) -> dict:
+        """Get registry paths"""
+        return self.config.registry_paths
+
+    def get_target_values(self) -> dict:
+        """Get target registry values"""
+        return self.config.target_values
+
+    def get_update_url_patterns(self) -> dict:
+        """Get update URL patterns"""
+        return self.config.update_url_patterns
+
+    def get_setting(self, section: str, key: str, fallback: str = None) -> str:
+        """Get a setting value from the config"""
+        return self.config.get_setting(section, key, fallback)
+
+    def set_setting(self, section: str, key: str, value: str):
+        """Set a setting value in the config"""
+        self.config.set_setting(section, key, value)
+
+    def get_backup_directory(self) -> str:
+        """Get the main backup directory"""
+        return self.config.backups_dir
+
+    def get_cursor_tools_directory(self) -> str:
+        """Get the Cursor Tools directory"""
+        return self.config.cursor_tools_dir
+
+
+# Global configuration instances
 config = CursorToolsConfig()
+config_manager = ConfigManager()

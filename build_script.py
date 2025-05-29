@@ -47,19 +47,33 @@ class CursorToolsBuilder:
             "pro_features.py",
             "auto_update_manager.py",
             "auto_update_config.py",
-            "requirements.txt",
-            "CHANGELOG.md",
-            "LICENSE",
-            "README.md"
+            "requirements.txt"
         ]
 
-        # Dependencies from requirements.txt
-        self.dependencies = [
-            "rich==13.7.0",
-            "colorama==0.4.6",
-            "requests==2.31.0",
-            "urllib3>=1.26.0"
-        ]
+        # Dependencies will be read from requirements.txt
+        self.dependencies = self._load_dependencies_from_requirements()
+
+    def _load_dependencies_from_requirements(self):
+        """Load dependencies from requirements.txt file"""
+        requirements_path = self.script_dir / "requirements.txt"
+        if not requirements_path.exists():
+            raise Exception("requirements.txt file not found. Please ensure requirements.txt exists in the project root.")
+
+        try:
+            with open(requirements_path, 'r', encoding='utf-8') as f:
+                dependencies = []
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if line and not line.startswith('#'):
+                        dependencies.append(line)
+
+                if not dependencies:
+                    raise Exception("requirements.txt is empty or contains no valid dependencies.")
+
+                return dependencies
+        except Exception as e:
+            raise Exception(f"Failed to read requirements.txt: {e}")
 
     def print_header(self):
         """Print build script header"""

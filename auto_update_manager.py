@@ -22,8 +22,7 @@ from rich.text import Text
 from rich.align import Align
 
 from ui_manager import UIManager
-from config import config
-from auto_update_config import auto_update_config
+from config import config, config_manager
 
 
 class AutoUpdateManager:
@@ -31,11 +30,16 @@ class AutoUpdateManager:
 
     def __init__(self):
         self.ui_manager = UIManager()
-        self.current_version = auto_update_config.CURRENT_VERSION
-        self.github_api_url = auto_update_config.GITHUB_API_URL
-        self.github_repo_url = auto_update_config.GITHUB_REPO_URL
-        self.update_check_timeout = auto_update_config.UPDATE_CHECK_TIMEOUT
-        self.download_timeout = auto_update_config.DOWNLOAD_TIMEOUT
+
+        # Get auto update configuration from centralized config manager
+        auto_config = config_manager.get_auto_update_config()
+        self.current_version = auto_config['CURRENT_VERSION']
+        self.github_api_url = auto_config['GITHUB_API_URL']
+        self.github_repo_url = auto_config['GITHUB_REPO_URL']
+        self.update_check_timeout = auto_config['UPDATE_CHECK_TIMEOUT']
+        self.download_timeout = auto_config['DOWNLOAD_TIMEOUT']
+        self.verify_ssl = auto_config['VERIFY_SSL']
+        self.allow_redirects = auto_config['ALLOW_REDIRECTS']
         self.temp_dir = None
         self.backup_dir = None
 
@@ -74,7 +78,7 @@ class AutoUpdateManager:
             self.ui_manager.display_info("Checking for updates...")
 
             # Get request configuration
-            request_config = auto_update_config.get_request_config()
+            request_config = config_manager.get_request_config()
 
             # Make request to GitHub API
             response = requests.get(self.github_api_url, **request_config)
@@ -122,7 +126,7 @@ class AutoUpdateManager:
             if "ssl" in error_msg or "certificate" in error_msg:
                 self.ui_manager.display_error("SSL certificate verification failed.")
                 self.ui_manager.display_warning("This may be due to corporate firewall or network configuration.")
-                self.ui_manager.display_info("You can manually check for updates at: " + auto_update_config.GITHUB_REPO_URL + "/releases")
+                self.ui_manager.display_info("You can manually check for updates at: " + self.github_repo_url + "/releases")
             else:
                 self.ui_manager.display_error(f"Error checking for updates: {str(e)}")
             return None
@@ -138,7 +142,7 @@ class AutoUpdateManager:
             self.ui_manager.display_info("Retrying update check with SSL verification disabled...")
 
             # Get fallback request configuration (SSL disabled)
-            request_config = auto_update_config.get_fallback_request_config()
+            request_config = config_manager.get_fallback_request_config()
 
             # Make request to GitHub API
             response = requests.get(self.github_api_url, **request_config)
@@ -170,7 +174,7 @@ class AutoUpdateManager:
 
         except Exception as e:
             self.ui_manager.display_error("Update check failed even with SSL disabled.")
-            self.ui_manager.display_info("You can manually check for updates at: " + auto_update_config.GITHUB_REPO_URL + "/releases")
+            self.ui_manager.display_info("You can manually check for updates at: " + self.github_repo_url + "/releases")
             return None
 
     def _is_newer_version(self, latest: str, current: str) -> bool:
@@ -206,7 +210,8 @@ class AutoUpdateManager:
         """
         for asset in assets:
             asset_name = asset.get("name", "")
-            if auto_update_config.is_valid_asset(asset_name):
+            # Check for valid Windows executable assets
+            if asset_name.endswith('.exe') and 'cursor-tools' in asset_name.lower():
                 return asset.get("browser_download_url")
 
         return None
@@ -285,8 +290,8 @@ class AutoUpdateManager:
                 download_url,
                 stream=True,
                 timeout=self.download_timeout,
-                verify=auto_update_config.VERIFY_SSL,
-                allow_redirects=auto_update_config.ALLOW_REDIRECTS
+                verify=self.verify_ssl,
+                allow_redirects=self.allow_redirects
             )
             response.raise_for_status()
 

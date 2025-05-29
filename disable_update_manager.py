@@ -9,8 +9,8 @@ from ui_manager import UIManager
 class DisableUpdateManager:
     def __init__(self):
         self.ui_manager = UIManager()
-        self.update_disabler = UpdateDisabler()
-    
+        self.update_disabler = UpdateDisabler(self.ui_manager)
+
     def run_disable_update_menu(self):
         """Run the Disable Auto Update sub-menu"""
         while True:

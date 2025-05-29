@@ -5,7 +5,11 @@ Main entry point for the command-line application
 
 import sys
 import os
-import ctypes
+from colorama import init
+
+# Initialize colorama for Windows compatibility (centralized initialization)
+init()
+
 from ui_manager import UIManager
 from device_id_modifier import DeviceIDModifier
 from account_info_manager import AccountInfoManager
@@ -13,32 +17,7 @@ from disable_update_manager import DisableUpdateManager
 from reset_machine_id_manager import ResetMachineIDManager
 from pro_features_manager import ProUIFeaturesMenuManager
 from auto_update_manager import AutoUpdateManager
-
-def is_admin():
-    """Check if the current process has administrator privileges"""
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
-
-def run_as_admin():
-    """Restart the current script with administrator privileges"""
-    try:
-        # Get the current script path
-        script_path = os.path.abspath(sys.argv[0])
-
-        # Use ShellExecute to run with elevated privileges
-        ctypes.windll.shell32.ShellExecuteW(
-            None,
-            "runas",
-            sys.executable,
-            f'"{script_path}"',
-            None,
-            1
-        )
-        return True
-    except Exception:
-        return False
+from utils import is_admin, run_as_admin
 
 class CursorToolsApp:
     def __init__(self):

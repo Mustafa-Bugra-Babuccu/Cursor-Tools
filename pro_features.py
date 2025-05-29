@@ -4,62 +4,26 @@ Handles Pro-related UI modifications, database updates, and feature unlocking
 """
 
 import os
-import sys
 import json
-import uuid
 import shutil
 import sqlite3
 import tempfile
 import glob
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 from datetime import datetime, timedelta
 from config import config
+from utils import get_workbench_cursor_path, FileManager, BackupManager
+from ui_manager import UIManager
 
-# Initialize colorama
-init()
+# Removed find_ui_files() - now using utils.FileManager.find_files_by_pattern()
 
-def find_ui_files(directory: str, extensions: list) -> list:
-    """Find UI files recursively (from reset.js findFiles function)"""
-    results = []
 
-    try:
-        if not os.path.exists(directory):
-            return results
 
-        for root, dirs, files in os.walk(directory):
-            # Skip hidden directories and node_modules
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != 'node_modules']
-
-            for file in files:
-                if any(file.endswith(ext) for ext in extensions):
-                    results.append(os.path.join(root, file))
-
-    except Exception:
-        pass
-
-    return results
-
-def get_workbench_cursor_path(translator=None) -> str:
-    """Get Cursor workbench.desktop.main.js path for Windows using centralized configuration"""
-    # Use centralized configuration path
-    workbench_path = config.reset_machine_id_paths['workbench_path']
-
-    if not os.path.exists(workbench_path):
-        error_msg = f"Cursor workbench file not found: {workbench_path}\n"
-        error_msg += "This usually means:\n"
-        error_msg += "  1. Cursor is not installed\n"
-        error_msg += "  2. Cursor is installed in a different location\n"
-        error_msg += "  3. The Cursor version has a different file structure\n"
-        error_msg += f"Expected file: {os.path.basename(workbench_path)}"
-
-        if translator:
-            error_msg = translator.get('pro.file_not_found', path=workbench_path)
-        raise OSError(error_msg)
-
-    return workbench_path
-
-def modify_workbench_js(file_path: str, translator=None, silent=False) -> bool:
+def modify_workbench_js(file_path: str, translator=None, silent=False, ui_manager=None) -> bool:
     """Modify workbench file content with Pro patterns"""
+    if ui_manager is None:
+        ui_manager = UIManager()
+
     try:
         # Save original file permissions
         original_stat = os.stat(file_path)
@@ -99,7 +63,7 @@ def modify_workbench_js(file_path: str, translator=None, silent=False) -> bool:
 
     except Exception as e:
         if not silent:
-            print(f"{Fore.RED}✗ {translator.get('pro.modify_file_failed', error=str(e)) if translator else f'Failed to modify file: {e}'}{Style.RESET_ALL}")
+            ui_manager.display_localized_error('pro.modify_file_failed', translator, error=str(e))
         if "tmp_path" in locals():
             try:
                 os.unlink(tmp_path)
@@ -107,11 +71,14 @@ def modify_workbench_js(file_path: str, translator=None, silent=False) -> bool:
                 pass
         return False
 
-def modify_ui_files(translator=None, silent=False) -> bool:
+def modify_ui_files(translator=None, silent=False, ui_manager=None) -> bool:
     """Comprehensive UI modification based on reset.js mc function"""
+    if ui_manager is None:
+        ui_manager = UIManager()
+
     try:
         if not silent:
-            print(f"{Fore.CYAN}ℹ {translator.get('pro.ui_customization') if translator else 'Starting comprehensive UI customization'}...{Style.RESET_ALL}")
+            ui_manager.display_step_info('pro.ui_customization', translator)
 
         # Get UI paths from config
         reset_paths = config.reset_machine_id_paths
@@ -128,11 +95,11 @@ def modify_ui_files(translator=None, silent=False) -> bool:
                 continue
 
             if not silent:
-                print(f"{Fore.CYAN}ℹ {translator.get('pro.searching_in', path=base_path) if translator else f'Searching in {base_path}'}...{Style.RESET_ALL}")
+                ui_manager.display_step_info('pro.searching_in', translator, path=base_path)
 
             # Find JS and HTML files
-            js_files = find_ui_files(base_path, ['.js'])
-            html_files = find_ui_files(base_path, ['.html'])
+            js_files = FileManager.find_files_by_pattern(base_path, patterns=[], extensions=['.js'])
+            html_files = FileManager.find_files_by_pattern(base_path, patterns=[], extensions=['.html'])
             all_files = js_files + html_files
 
             for file_path in all_files:
@@ -160,24 +127,24 @@ def modify_ui_files(translator=None, silent=False) -> bool:
                             f.write(new_content)
 
                         if not silent:
-                            print(f"{Fore.GREEN}✓ {translator.get('pro.ui_file_modified', file=file_path) if translator else f'Modified UI file: {os.path.basename(file_path)}'}{Style.RESET_ALL}")
+                            ui_manager.display_localized_success('pro.ui_file_modified', translator, file=file_path)
                         modified_files += 1
 
                 except Exception as err:
                     if not silent:
-                        print(f"{Fore.YELLOW}⚠ {translator.get('pro.ui_file_error', file=file_path, error=str(err)) if translator else f'Error processing {os.path.basename(file_path)}: {err}'}{Style.RESET_ALL}")
+                        ui_manager.display_localized_warning('pro.ui_file_error', translator, file=file_path, error=str(err))
 
         if not silent:
             if modified_files == 0:
-                print(f"{Fore.YELLOW}ℹ {translator.get('pro.no_ui_files') if translator else 'No UI files found containing target patterns. UI customization skipped.'}{Style.RESET_ALL}")
+                ui_manager.display_localized_warning('pro.no_ui_files', translator)
             else:
-                print(f"{Fore.GREEN}✓ {translator.get('pro.ui_customization_complete', count=modified_files) if translator else f'UI customization complete. Modified {modified_files} files.'}{Style.RESET_ALL}")
+                ui_manager.display_localized_success('pro.ui_customization_complete', translator, count=modified_files)
 
         return True
 
     except Exception as e:
         if not silent:
-            print(f"{Fore.RED}✗ {translator.get('pro.ui_customization_failed', error=str(e)) if translator else f'UI customization failed: {e}'}{Style.RESET_ALL}")
+            ui_manager.display_localized_error('pro.ui_customization_failed', translator, error=str(e))
         return False
 
 class ProUIFeaturesBackupManager:
@@ -185,6 +152,8 @@ class ProUIFeaturesBackupManager:
 
     def __init__(self, translator=None):
         self.translator = translator
+        self.ui_manager = UIManager()
+        self.backup_manager = BackupManager(config.reset_machine_id_paths['pro_backups_dir'])
         self.backup_dir = config.reset_machine_id_paths['pro_backups_dir']
         self.sqlite_path = config.cursor_paths['sqlite_path']
         self.storage_path = config.reset_machine_id_paths['storage_config_path']
@@ -201,7 +170,7 @@ class ProUIFeaturesBackupManager:
             backup_path = os.path.join(self.backup_dir, backup_name)
 
             if not silent:
-                print(f"{Fore.CYAN}ℹ {self.translator.get('pro.creating_backup') if self.translator else 'Creating full Pro Features backup'}...{Style.RESET_ALL}")
+                self.ui_manager.display_step_info('pro.creating_backup', self.translator)
 
             # Create backup directory
             os.makedirs(backup_path, exist_ok=True)
@@ -252,8 +221,8 @@ class ProUIFeaturesBackupManager:
                     os.makedirs(ui_backup_dir, exist_ok=True)
 
                     # Find and backup UI files
-                    js_files = find_ui_files(ui_path, ['.js'])
-                    html_files = find_ui_files(ui_path, ['.html'])
+                    js_files = FileManager.find_files_by_pattern(ui_path, patterns=[], extensions=['.js'])
+                    html_files = FileManager.find_files_by_pattern(ui_path, patterns=[], extensions=['.html'])
 
                     for file_path in js_files + html_files:
                         try:
@@ -290,7 +259,7 @@ class ProUIFeaturesBackupManager:
 
         except Exception as e:
             if not silent:
-                print(f"{Fore.RED}✗ {self.translator.get('pro.backup_failed', error=str(e)) if self.translator else f'Backup creation failed: {e}'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_error('pro.backup_failed', self.translator, error=str(e))
             return None
 
     def list_backups(self) -> list:
@@ -335,7 +304,7 @@ class ProUIFeaturesBackupManager:
             return backups
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('pro.list_backups_failed', error=str(e)) if self.translator else f'Failed to list backups: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_localized_error('pro.list_backups_failed', self.translator, error=str(e))
             return []
 
     def restore_backup(self, backup_name: str) -> bool:
@@ -372,26 +341,26 @@ class ProUIFeaturesBackupManager:
                         restored_files += 1
 
                         file_type = file_info.get("type", "unknown")
-                        print(f"{Fore.GREEN}✓ {self.translator.get('pro.restored_file', type=file_type, file=os.path.basename(original_file)) if self.translator else f'Restored {file_type}: {os.path.basename(original_file)}'}{Style.RESET_ALL}")
+                        self.ui_manager.display_localized_success('pro.restored_file', self.translator, type=file_type, file=os.path.basename(original_file))
                     else:
                         backup_file_name = file_info['backup']
-                        print(f"{Fore.YELLOW}⚠ {self.translator.get('pro.backup_file_missing', file=backup_file_name) if self.translator else f'Backup file missing: {backup_file_name}'}{Style.RESET_ALL}")
+                        self.ui_manager.display_localized_warning('pro.backup_file_missing', self.translator, file=backup_file_name)
                         failed_files += 1
 
                 except Exception as e:
                     backup_file_name = file_info.get('backup', 'unknown')
-                    print(f"{Fore.RED}✗ {self.translator.get('pro.restore_file_failed', file=backup_file_name, error=str(e)) if self.translator else f'Failed to restore {backup_file_name}: {e}'}{Style.RESET_ALL}")
+                    self.ui_manager.display_localized_error('pro.restore_file_failed', self.translator, file=backup_file_name, error=str(e))
                     failed_files += 1
 
             if failed_files == 0:
-                print(f"{Fore.GREEN}✓ {self.translator.get('pro.restore_success', count=restored_files) if self.translator else f'Backup restored successfully! {restored_files} files restored.'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_success('pro.restore_success', self.translator, count=restored_files)
                 return True
             else:
-                print(f"{Fore.YELLOW}⚠ {self.translator.get('pro.restore_partial', restored=restored_files, failed=failed_files) if self.translator else f'Backup partially restored: {restored_files} files restored, {failed_files} failed.'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_warning('pro.restore_partial', self.translator, restored=restored_files, failed=failed_files)
                 return False
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('pro.restore_failed', error=str(e)) if self.translator else f'Backup restoration failed: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_localized_error('pro.restore_failed', self.translator, error=str(e))
             return False
 
     def delete_backup(self, backup_name: str) -> bool:
@@ -400,15 +369,15 @@ class ProUIFeaturesBackupManager:
             backup_path = os.path.join(self.backup_dir, backup_name)
 
             if not os.path.exists(backup_path):
-                print(f"{Fore.RED}✗ {self.translator.get('pro.backup_not_found', name=backup_name) if self.translator else f'Backup not found: {backup_name}'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_error('pro.backup_not_found', self.translator, name=backup_name)
                 return False
 
             shutil.rmtree(backup_path)
-            print(f"{Fore.GREEN}✓ {self.translator.get('pro.backup_deleted', name=backup_name) if self.translator else f'Backup deleted: {backup_name}'}{Style.RESET_ALL}")
+            self.ui_manager.display_localized_success('pro.backup_deleted', self.translator, name=backup_name)
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('pro.delete_backup_failed', name=backup_name, error=str(e)) if self.translator else f'Failed to delete backup {backup_name}: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_localized_error('pro.delete_backup_failed', self.translator, name=backup_name, error=str(e))
             return False
 
     def cleanup_old_backups(self, retention_days: int = 30) -> int:
@@ -497,12 +466,12 @@ class ProUIFeaturesManager:
             conn.close()
 
             if not silent:
-                print(f"{Fore.GREEN}✓ {self.translator.get('pro.database_updated') if self.translator else 'Pro tier database updated successfully'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_success('pro.database_updated', self.translator)
             return True
 
         except Exception as e:
             if not silent:
-                print(f"{Fore.RED}✗ {self.translator.get('pro.database_error', error=str(e)) if self.translator else f'Database error: {e}'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_error('pro.database_error', self.translator, error=str(e))
             return False
 
     def update_storage_config(self, silent=False) -> bool:
@@ -535,16 +504,16 @@ class ProUIFeaturesManager:
                     json.dump(storage_data, f, indent=2)
 
                 if not silent:
-                    print(f"{Fore.GREEN}✓ {self.translator.get('pro.storage_updated') if self.translator else 'Storage configuration updated successfully'}{Style.RESET_ALL}")
+                    self.ui_manager.display_localized_success('pro.storage_updated', self.translator)
                 return True
             else:
                 if not silent:
-                    print(f"{Fore.YELLOW}⚠ {self.translator.get('pro.storage_invalid') if self.translator else 'Invalid storage data format'}{Style.RESET_ALL}")
+                    self.ui_manager.display_localized_warning('pro.storage_invalid', self.translator)
                 return False
 
         except Exception as e:
             if not silent:
-                print(f"{Fore.RED}✗ {self.translator.get('pro.storage_update_failed', error=str(e)) if self.translator else f'Failed to update storage config: {e}'}{Style.RESET_ALL}")
+                self.ui_manager.display_localized_error('pro.storage_update_failed', self.translator, error=str(e))
             return False
 
     def apply_pro_features(self, silent=False) -> bool:
@@ -577,7 +546,7 @@ class ProUIFeaturesManager:
 
             # Step 4: Apply workbench modifications
             try:
-                workbench_path = get_workbench_cursor_path(self.translator)
+                workbench_path = get_workbench_cursor_path()
                 if not modify_workbench_js(workbench_path, self.translator, silent=True):
                     success = False
             except Exception:
@@ -636,7 +605,7 @@ class ProUIFeaturesManager:
             # Step 4: Apply workbench modifications
             print(f"{Fore.CYAN}ℹ {self.translator.get('pro.step4') if self.translator else 'Step 4: Applying workbench modifications'}...{Style.RESET_ALL}")
             try:
-                workbench_path = get_workbench_cursor_path(self.translator)
+                workbench_path = get_workbench_cursor_path()
                 if not modify_workbench_js(workbench_path, self.translator):
                     success = False
             except Exception as e:

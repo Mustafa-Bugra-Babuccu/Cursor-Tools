@@ -5,18 +5,16 @@ Handles disabling Cursor auto-update functionality (Windows-only)
 
 import os
 import shutil
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 import subprocess
 from config import config
 import re
 import tempfile
-
-# Initialize colorama
-init()
+from ui_manager import UIManager
 
 class UpdateDisabler:
-    def __init__(self, translator=None):
-        self.translator = translator
+    def __init__(self, ui_manager=None):
+        self.ui_manager = ui_manager if ui_manager else UIManager()
 
         # Use centralized configuration (Windows-only)
         self.updater_path = config.update_disabler_paths['updater_path']
@@ -55,7 +53,7 @@ class UpdateDisabler:
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('reset.modify_file_failed', error=str(e)) if self.translator else f'Failed to modify product.json: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_error(f"Failed to modify product.json: {e}")
             if "tmp_path" in locals():
                 os.unlink(tmp_path)
             return False
@@ -68,7 +66,7 @@ class UpdateDisabler:
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('update.kill_process_failed', error=str(e)) if self.translator else f'Failed to end processes: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_error(f"Failed to end processes: {e}")
             return False
 
     def _remove_updater_directory(self):
@@ -85,7 +83,7 @@ class UpdateDisabler:
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('update.remove_directory_failed', error=str(e)) if self.translator else f'Failed to remove directory: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_error(f"Failed to remove directory: {e}")
             return True
 
     def _clear_update_yml_file(self):
@@ -100,7 +98,7 @@ class UpdateDisabler:
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('update.clear_update_yml_failed', error=str(e)) if self.translator else f'Failed to clear update configuration file: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_error(f"Failed to clear update configuration file: {e}")
             return False
 
     def _create_blocking_file(self):
@@ -133,7 +131,7 @@ class UpdateDisabler:
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('update.create_block_file_failed', error=str(e)) if self.translator else f'Failed to create blocking files: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_error(f"Failed to create blocking files: {e}")
             return True  # Return True to continue execution
 
     def disable_auto_update(self):
@@ -159,24 +157,32 @@ class UpdateDisabler:
             if not self._remove_update_url():
                 return False
 
-            print(f"{Fore.GREEN}✓ {self.translator.get('update.disable_success') if self.translator else 'Auto-update disabled successfully'}{Style.RESET_ALL}")
+            self.ui_manager.display_success("Auto-update disabled successfully")
             return True
 
         except Exception as e:
-            print(f"{Fore.RED}✗ {self.translator.get('update.disable_failed', error=str(e)) if self.translator else f'Failed to disable auto-update: {e}'}{Style.RESET_ALL}")
+            self.ui_manager.display_error(f"Failed to disable auto-update: {e}")
             return False
 
-def run(translator=None):
+def run(ui_manager=None):
     """Convenient function for directly calling the disable function"""
-    print(f"\n{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}⚬ {translator.get('update.title') if translator else 'Disable Cursor Auto Update'}{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
+    if ui_manager:
+        ui_manager.clear_screen()
+        ui_manager.display_header()
+        ui_manager.display_info("Disable Cursor Auto Update")
+    else:
+        print(f"\n{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}⚬ Disable Cursor Auto Update{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
 
-    disabler = UpdateDisabler(translator)
+    disabler = UpdateDisabler(ui_manager)
     disabler.disable_auto_update()
 
-    print(f"\n{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
-    input(f"ℹ {translator.get('update.press_enter') if translator else 'Press Enter to Continue...'}")
+    if ui_manager:
+        ui_manager.pause()
+    else:
+        print(f"\n{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
+        input("ℹ Press Enter to Continue...")
 
 if __name__ == "__main__":
     # For standalone testing

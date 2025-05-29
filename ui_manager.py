@@ -10,10 +10,6 @@ from rich.text import Text
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.align import Align
-from colorama import init
-
-# Initialize colorama for Windows compatibility
-init()
 
 class UIManager:
     def __init__(self):
@@ -169,6 +165,31 @@ class UIManager:
         """Display info message"""
         self.console.print(f"[bold blue]ℹ {message}[/bold blue]")
 
+    def display_localized_error(self, key: str, translator=None, **kwargs):
+        """Display localized error message"""
+        message = translator.get(key, **kwargs) if translator else key
+        self.display_error(message)
+
+    def display_localized_warning(self, key: str, translator=None, **kwargs):
+        """Display localized warning message"""
+        message = translator.get(key, **kwargs) if translator else key
+        self.display_warning(message)
+
+    def display_localized_info(self, key: str, translator=None, **kwargs):
+        """Display localized info message"""
+        message = translator.get(key, **kwargs) if translator else key
+        self.display_info(message)
+
+    def display_localized_success(self, key: str, translator=None, **kwargs):
+        """Display localized success message"""
+        message = translator.get(key, **kwargs) if translator else key
+        self.display_success(message)
+
+    def display_step_info(self, step_key: str, translator=None, **kwargs):
+        """Display step information with cyan formatting"""
+        message = translator.get(step_key, **kwargs) if translator else step_key
+        self.console.print(f"[cyan]ℹ {message}...[/cyan]")
+
     def display_registry_values(self, title, values_dict):
         """Display registry values in a formatted table with consistent width"""
         # Create table with full console width to match header panel
@@ -240,3 +261,136 @@ class UIManager:
         )
 
         self.console.print(update_panel)
+
+    def display_account_info_table(self, account_data: dict):
+        """Format and display account information in a structured table"""
+        table = Table(title="Cursor Account Information", show_header=True, header_style="bold magenta")
+        table.add_column("Property", style="cyan", no_wrap=True)
+        table.add_column("Value", style="white")
+
+        # Email information
+        email = account_data.get('email', 'Not found')
+        table.add_row("Email", email if email else "Not available")
+
+        # Subscription information
+        subscription_type = account_data.get('subscription_type', 'Free')
+        table.add_row("Subscription Type", subscription_type)
+
+        # Subscription details
+        subscription_info = account_data.get('subscription_info')
+        if subscription_info and isinstance(subscription_info, dict):
+            if 'subscription' in subscription_info:
+                sub = subscription_info['subscription']
+                if 'status' in sub:
+                    table.add_row("Subscription Status", sub['status'])
+                if 'current_period_end' in sub:
+                    table.add_row("Current Period End", str(sub['current_period_end']))
+
+        # Usage information
+        usage_info = account_data.get('usage_info')
+        if usage_info and isinstance(usage_info, dict):
+            if 'usage' in usage_info:
+                usage = usage_info['usage']
+                for key, value in usage.items():
+                    if isinstance(value, (int, float)):
+                        table.add_row(f"Usage - {key.replace('_', ' ').title()}", str(value))
+
+        self.console.print(table)
+
+    def display_backup_list_table(self, backup_data: list):
+        """Format and display backup listings in a structured table"""
+        if not backup_data:
+            self.display_info("No backups found.")
+            return
+
+        table = Table(title="Available Backups", show_header=True, header_style="bold magenta")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Type", style="yellow")
+        table.add_column("Date", style="green")
+        table.add_column("Source", style="white")
+        table.add_column("Size", style="blue")
+
+        for backup in backup_data:
+            backup_id = backup.get('backup_id', 'Unknown')[:20] + "..." if len(backup.get('backup_id', '')) > 20 else backup.get('backup_id', 'Unknown')
+            backup_type = backup.get('backup_type', 'Unknown')
+            formatted_date = backup.get('formatted_date', 'Unknown')
+            source_path = os.path.basename(backup.get('source_path', 'Unknown'))
+            file_size = self._format_file_size(backup.get('file_size', 0))
+
+            table.add_row(backup_id, backup_type, formatted_date, source_path, file_size)
+
+        self.console.print(table)
+
+    def display_system_info_table(self, system_data: dict):
+        """Format and display system information in a structured table"""
+        table = Table(title="System Information", show_header=True, header_style="bold magenta")
+        table.add_column("Component", style="cyan", no_wrap=True)
+        table.add_column("Status", style="white")
+        table.add_column("Details", style="yellow")
+
+        for component, info in system_data.items():
+            if isinstance(info, dict):
+                status = "✅ OK" if info.get('status', False) else "❌ Error"
+                details = info.get('details', 'No details available')
+            else:
+                status = str(info)
+                details = ""
+
+            table.add_row(component.replace('_', ' ').title(), status, details)
+
+        self.console.print(table)
+
+    def display_progress_with_steps(self, steps: list, current_step: int):
+        """Show multi-step progress with step indicators"""
+        # Display step overview
+        self.console.print(f"\n[bold cyan]Progress: Step {current_step + 1} of {len(steps)}[/bold cyan]")
+
+        # Display all steps with status indicators
+        for i, step in enumerate(steps):
+            if i < current_step:
+                status = "[green]✅[/green]"
+            elif i == current_step:
+                status = "[yellow]⏳[/yellow]"
+            else:
+                status = "[dim]⏸️[/dim]"
+
+            step_text = f"{status} {step}"
+            if i == current_step:
+                step_text = f"[bold]{step_text}[/bold]"
+
+            self.console.print(f"  {step_text}")
+
+        self.console.print()
+
+    def display_file_operation_results(self, results: dict):
+        """Display results of file operations in a formatted table"""
+        table = Table(title="File Operation Results", show_header=True, header_style="bold magenta")
+        table.add_column("File", style="cyan")
+        table.add_column("Status", style="white")
+        table.add_column("Details", style="yellow")
+
+        for file_path, result in results.items():
+            filename = os.path.basename(file_path)
+            if result.get('success', False):
+                status = "[green]✅ Success[/green]"
+                details = "Operation completed successfully"
+            else:
+                status = "[red]❌ Failed[/red]"
+                details = result.get('error', 'Unknown error')
+
+            table.add_row(filename, status, details)
+
+        self.console.print(table)
+
+    def _format_file_size(self, size_bytes: int) -> str:
+        """Format file size in human readable format"""
+        if size_bytes == 0:
+            return "0 B"
+
+        size_names = ["B", "KB", "MB", "GB"]
+        i = 0
+        while size_bytes >= 1024 and i < len(size_names) - 1:
+            size_bytes /= 1024.0
+            i += 1
+
+        return f"{size_bytes:.1f} {size_names[i]}"

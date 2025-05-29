@@ -10,29 +10,23 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any
 from config import config
+from utils import AdminPrivilegeManager, BackupManager
+from ui_manager import UIManager
 
 class RegistryManager:
     def __init__(self):
         # Use centralized configuration
         self.backup_dir = config.backups_dir
         self.registry_paths = config.registry_paths
+        self.ui_manager = UIManager()
+        self.backup_manager = BackupManager(self.backup_dir)
 
         # Directory creation is handled by config initialization
         # No need to create directories here as config already ensures they exist
 
     def check_admin_privileges(self) -> bool:
         """Check if the application is running with administrator privileges"""
-        try:
-            # Try to open a registry key that requires admin access
-            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                               r"SYSTEM\CurrentControlSet\Control",
-                               0, winreg.KEY_READ | winreg.KEY_WRITE)
-            winreg.CloseKey(key)
-            return True
-        except PermissionError:
-            return False
-        except Exception:
-            return False
+        return AdminPrivilegeManager.check_admin_privileges()
 
     def read_registry_values(self) -> Dict[str, Dict[str, Any]]:
         """Read current registry values from all target locations"""
@@ -69,24 +63,34 @@ class RegistryManager:
         return values
 
     def create_backup(self) -> str:
-        """Create a backup of current registry values"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_filename = f"registry_backup_{timestamp}.json"
-        backup_path = os.path.join(self.backup_dir, backup_filename)
-
+        """Create a backup of current registry values using centralized BackupManager"""
         try:
             current_values = self.read_registry_values()
 
-            backup_data = {
-                "timestamp": timestamp,
-                "backup_date": datetime.now().isoformat(),
-                "registry_values": current_values
-            }
+            # Create a temporary file with registry data
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                backup_data = {
+                    "backup_date": datetime.now().isoformat(),
+                    "registry_values": current_values
+                }
+                json.dump(backup_data, temp_file, indent=2, default=str)
+                temp_path = temp_file.name
 
-            with open(backup_path, 'w') as f:
-                json.dump(backup_data, f, indent=2, default=str)
+            # Use centralized backup manager
+            backup_id = self.backup_manager.create_backup(
+                temp_path,
+                "registry_backup",
+                {"backup_type": "registry", "values_count": len(current_values)}
+            )
 
-            return backup_path
+            # Clean up temporary file
+            os.unlink(temp_path)
+
+            if backup_id:
+                return backup_id
+            else:
+                raise Exception("Failed to create backup using BackupManager")
 
         except Exception as e:
             raise Exception(f"Failed to create backup: {str(e)}")
